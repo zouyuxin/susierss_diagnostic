@@ -1,0 +1,144 @@
+---
+title: "SuSiE RSS Diagnostic NULL"
+author: "Yuxin Zou"
+date: "12/31/2020"
+output: 
+  workflowr::wflow_html:
+    code_folding: hide
+---
+
+In diagnostic, we assume the following model
+$$
+\hat{z} \sim N(Rz, \sigma^2 R + s^2 I), \sigma^2 + s^2 \leq 1.
+$$
+Let $R = U D U^\intercal$ be eigen-decomposition of $R$, $D$ has $p_1$ postive diagonal elements, $U = [U_1 \ U_2]$, $U_1$ is a $p$ by $p_1$ matrix, $U2$ is a $p$ by $p_2=p-p_1$ matrix. We transform $\hat{z}$ into null space of $R$ by multiplying $U_2^\intercal$
+$$
+U_2^T \hat{z} \sim N(0, s^2 I_{p_2}).
+$$
+Therefore, $s^2$ can be estimated as $\frac{1}{p_2} \hat{z}^\intercal U_2 U_2^\intercal \hat{z}$.
+
+Under the null $z = 0$, the model is
+$$
+\hat{z} \sim N(0, \sigma^2 R + s^2 I), \sigma^2 + s^2 \leq 1.
+$$
+With estimated $s^2$, we can estimate $\sigma^2$ either by $1-s^2$, or by maximum likelihood. The likelihood is 
+$$
+l(\sigma^2) = p(U_1^\intercal \hat{z}) = N(U_1^\intercal \hat{z}; 0, \sigma^2 D_1 + s^2 I_{p_1})
+$$
+There is no analytical solution using maximum likelihood. I found the solution using `optim`.
+
+With $\sigma^2$ and $s^2$, the posterior distribution of $\hat{z}_j | \hat{z}_{-j}$ is as following:
+$$
+\hat{z}_j | \hat{z}_{-j} \sim N(-\frac{1}{\Omega_{jj}} \Omega_{j,-j} \hat{z}_{-j},1/\Omega_{jj}), \Omega = (\sigma^2 R + s^2 I)^{-1}
+$$
+
+In the following simulation, we extract 200 regions from 1000 Genome data using GBR (British in England and Scotland) and IBS (Iberian Populations in Spain) population. We got 1000 Genome genotypes from ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/supporting/hd_genotype_chip, ALL.chip.omni_broad_sanger_combined.20140818.snps.genotypes.vcf.gz. The VCF file is converted to bed format using plink. We removed related samples. There are 103 GBR samples and 150 IBS samples. We generated null z scores based on GBR samples and we want to detect the inconsistency between z scores and LD (from GBR or IBS). 
+
+```{r}
+library(tibble)
+library(dplyr)
+out = readRDS('results/rss_diagnostic_null/susierss_diagnostic_null_query.rds')
+out = as_tibble(out)
+out_sample = out %>% filter(susie_rss.ld_type == 'sample', susie_rss.z_ld_weight == 0, 
+                            susie_rss.estimate_residual_variance == TRUE)
+out_ref = out %>% filter(susie_rss.ld_type == 'ref', susie_rss.z_ld_weight == 0,
+                         susie_rss.estimate_residual_variance == TRUE)
+out_samplez = out %>% filter(susie_rss.ld_type == 'sample', susie_rss.z_ld_weight == 0.0066667, 
+                            susie_rss.estimate_residual_variance == TRUE)
+out_refz = out %>% filter(susie_rss.ld_type == 'ref', susie_rss.z_ld_weight == 0.0066667,
+                         susie_rss.estimate_residual_variance == TRUE)
+```
+
+Here is a summary of number of SNPs in each region:
+```{r}
+summary(sapply(out_sample$susie_rss.res_simple, function(x) nrow(x$post)))
+```
+
+## Check $s^2$
+
+```{r}
+par(mfrow=c(1,2))
+out_sample_s2 = apply(out_sample, 1, function(x) x$susie_rss.res_simple$s2)
+out_samplez_s2 = apply(out_samplez, 1, function(x) x$susie_rss.res_simple$s2)
+out_ref_s2 = apply(out_ref, 1, function(x) x$susie_rss.res_mle$s2)
+out_refz_s2 = apply(out_refz, 1, function(x) x$susie_rss.res_mle$s2)
+plot(out_sample_s2, out_ref_s2, xlab = 'LD = sample', ylab='LD = ref')
+abline(0,1)
+plot(out_sample_s2, out_refz_s2, xlab = 'LD = sample', ylab='LD = ref z')
+abline(0,1)
+```
+
+## Check $\sigma^2$ from simple ($1-s^2$) or mle
+
+```{r}
+par(mfrow=c(1,2))
+out_sample_sigma2_1 = apply(out_sample, 1, function(x) x$susie_rss.res_simple$sigma2)
+out_sample_sigma2_2 = apply(out_sample, 1, function(x) x$susie_rss.res_mle$sigma2)
+plot(out_sample_sigma2_1, out_sample_sigma2_2, xlab='simple', ylab='mle', main='sample')
+abline(0,1)
+
+out_ref_sigma2_1 = apply(out_ref, 1, function(x) x$susie_rss.res_simple$sigma2)
+out_ref_sigma2_2 = apply(out_ref, 1, function(x) x$susie_rss.res_mle$sigma2)
+plot(out_ref_sigma2_1, out_ref_sigma2_2, xlab='simple', ylab='mle', main='ref')
+abline(0,1)
+```
+The estimated $\sigma^2$ from simple method and mle are very similar.
+
+We use $\sigma^2$ from simple method in the following checks.
+
+## Check conditional mean
+
+```{r}
+par(mfrow=c(1,2))
+z = unlist(lapply(out_sample$susie_rss.res_simple, function(x) x$post$z))
+out_sample_mean = unlist(lapply(out_sample$susie_rss.res_simple, function(x) x$post$postmean))
+out_sample_sd = unlist(lapply(out_sample$susie_rss.res_simple, function(x) sqrt(x$post$postvar)))
+out_sample_prob = unlist(lapply(out_sample$susie_rss.res_simple, function(x) x$post$prob))
+out_ref_mean = unlist(lapply(out_ref$susie_rss.res_simple, function(x) x$post$postmean))
+out_ref_sd = unlist(lapply(out_ref$susie_rss.res_simple, function(x) sqrt(x$post$postvar)))
+out_ref_prob = unlist(lapply(out_ref$susie_rss.res_simple, function(x) x$post$prob))
+out_refz_mean = unlist(lapply(out_refz$susie_rss.res_simple, function(x) x$post$postmean))
+out_refz_sd = unlist(lapply(out_refz$susie_rss.res_simple, function(x) sqrt(x$post$postvar)))
+out_refz_prob = unlist(lapply(out_refz$susie_rss.res_simple, function(x) x$post$prob))
+boxplot(abs(z-out_sample_mean), abs(z-out_ref_mean), abs(z-out_refz_mean), horizontal = TRUE, names=c('sample', 'ref', 'ref z'), main='Difference between z and conditional mean', cex.main=0.8)
+boxplot(abs((z-out_sample_mean)/out_sample_sd), abs((z-out_ref_mean)/out_ref_sd), abs((z-out_refz_mean)/out_refz_sd), horizontal = TRUE, names=c('sample', 'ref', 'ref z'), main='Standardized difference between z and conditional mean', cex.main=0.8)
+```
+
+## Check one data set
+
+```{r}
+dat = readRDS('output/rss_diagnostic_null/data/data_3.rds')
+sim = readRDS('output/rss_diagnostic_null/sim_gaussian_null/data_3_sim_gaussian_null_1.rds')
+sim$sumstats = readRDS('output/rss_diagnostic_null/get_sumstats/data_3_sim_gaussian_null_1_get_sumstats_1.rds')
+z = sim$sumstats$sumstats$betahat/sim$sumstats$sumstats$sebetahat
+```
+
+Using GBR sample LD, the estimated $\sigma^2 = $ `r round(out_sample$susie_rss.res_simple[[3]]$sigma2, 4)`, the estimated $s^2 = $ `r round(out_sample$susie_rss.res_simple[[3]]$s2, 4)`. Using IBS reference LD, the estimated $\sigma^2 = $ `r round(out_ref$susie_rss.res_simple[[3]]$sigma2, 4)`, the estimated $s^2 = $ `r round(out_ref$susie_rss.res_simple[[3]]$s2, 4)`. After adjusting for z, the estimated $\sigma^2 = $ `r round(out_refz$susie_rss.res_simple[[3]]$sigma2, 4)`, the estimated $s^2 = $ `r round(out_refz$susie_rss.res_simple[[3]]$s2, 4)`.
+
+The 2 norm between 2 LD matrices is `r out_sample$data.r_2norm[3]`. The max norm between 2 LD matrices is `r out_sample$data.r_maxnorm[3]`.
+
+```{r}
+plot(out_sample$susie_rss.Uz[[3]]^2, out_sample$susie_rss.ld_eigenval[[3]], xlab = 'U^T z', ylab = 'D', main='LD = GBR sample')
+abline(0,1)
+```
+
+```{r}
+plot(out_ref$susie_rss.Uz[[3]]^2, out_ref$susie_rss.ld_eigenval[[3]], xlab = 'U^T z', ylab = 'D', main='LD = IBS ref')
+abline(0,1)
+```
+
+```{r}
+z_sample_mean = out_sample$susie_rss.res_simple[[3]]$post$postmean
+z_sample_sd = sqrt(out_sample$susie_rss.res_simple[[3]]$post$postvar)
+z_sample_prob = out_sample$susie_rss.res_simple[[3]]$post$prob
+z_ref_mean = out_ref$susie_rss.res_simple[[3]]$post$postmean
+z_ref_sd = sqrt(out_ref$susie_rss.res_simple[[3]]$post$postvar)
+z_ref_prob = out_ref$susie_rss.res_simple[[3]]$post$prob
+z_refz_mean = out_refz$susie_rss.res_simple[[3]]$post$postmean
+z_refz_sd = sqrt(out_refz$susie_rss.res_simple[[3]]$post$postvar)
+z_refz_prob = out_refz$susie_rss.res_simple[[3]]$post$prob
+boxplot(abs(z-z_sample_mean), abs(z-z_ref_mean), abs(z-z_refz_mean), horizontal = TRUE, names=c('sample', 'ref', 'ref z'), main='Difference between z and conditional mean')
+boxplot(abs((z-z_sample_mean)/z_sample_sd), abs((z-z_ref_mean)/z_ref_sd), abs((z-z_refz_mean)/z_refz_sd), horizontal = TRUE, names=c('sample', 'ref', 'ref z'), main='Standardized difference between z and conditional mean')
+```
+
+
