@@ -8,4 +8,6 @@ editor_options:
   chunk_output_type: console
 ---
 
-Welcome to my research website.
+SuSiE-RSS model diagnostic
+
+Simulation under null: [result](diagnostic_null.html)
