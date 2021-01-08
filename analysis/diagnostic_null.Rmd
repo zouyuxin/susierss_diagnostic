@@ -113,7 +113,7 @@ sim$sumstats = readRDS('output/rss_diagnostic_null/get_sumstats/data_3_sim_gauss
 z = sim$sumstats$sumstats$betahat/sim$sumstats$sumstats$sebetahat
 ```
 
-Using GBR sample LD, the estimated $\sigma^2 = $ `r round(out_sample$susie_rss.res_simple[[3]]$sigma2, 4)`, the estimated $s^2 = $ `r round(out_sample$susie_rss.res_simple[[3]]$s2, 4)`. Using IBS reference LD, the estimated $\sigma^2 = $ `r round(out_ref$susie_rss.res_simple[[3]]$sigma2, 4)`, the estimated $s^2 = $ `r round(out_ref$susie_rss.res_simple[[3]]$s2, 4)`. After adjusting for z, the estimated $\sigma^2 = $ `r round(out_refz$susie_rss.res_simple[[3]]$sigma2, 4)`, the estimated $s^2 = $ `r round(out_refz$susie_rss.res_simple[[3]]$s2, 4)`.
+Using GBR sample LD, the estimated $\sigma^2 =$ `r round(out_sample$susie_rss.res_simple[[3]]$sigma2, 4)`, the estimated $s^2 =$ `r round(out_sample$susie_rss.res_simple[[3]]$s2, 4)`. Using IBS reference LD, the estimated $\sigma^2 =$ `r round(out_ref$susie_rss.res_simple[[3]]$sigma2, 4)`, the estimated $s^2 =$ `r round(out_ref$susie_rss.res_simple[[3]]$s2, 4)`. After adjusting for z, the estimated $\sigma^2 =$ `r round(out_refz$susie_rss.res_simple[[3]]$sigma2, 4)`, the estimated $s^2 =$ `r round(out_refz$susie_rss.res_simple[[3]]$s2, 4)`.
 
 The 2 norm between 2 LD matrices is `r out_sample$data.r_2norm[3]`. The max norm between 2 LD matrices is `r out_sample$data.r_maxnorm[3]`.
 
