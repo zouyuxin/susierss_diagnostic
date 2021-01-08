@@ -455,7 +455,7 @@ div.tocify {
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2021-01-06
+<strong>Last updated:</strong> 2021-01-08
 </p>
 <p>
 <strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
@@ -546,16 +546,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomzouyuxinsusierssdiagnostictreea0d4236209ef90f126d22a72300bc9f645aa47a9targetblanka0d4236a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/zouyuxin/susierss_diagnostic/tree/a0d4236209ef90f126d22a72300bc9f645aa47a9" target="_blank">a0d4236</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomzouyuxinsusierssdiagnostictree217273cc48fd6e7469de7c09459ea921a8d9e833targetblank217273ca"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/zouyuxin/susierss_diagnostic/tree/217273cc48fd6e7469de7c09459ea921a8d9e833" target="_blank">217273c</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomzouyuxinsusierssdiagnostictreea0d4236209ef90f126d22a72300bc9f645aa47a9targetblanka0d4236a" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomzouyuxinsusierssdiagnostictree217273cc48fd6e7469de7c09459ea921a8d9e833targetblank217273ca" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/zouyuxin/susierss_diagnostic/tree/a0d4236209ef90f126d22a72300bc9f645aa47a9" target="_blank">a0d4236</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/zouyuxin/susierss_diagnostic/tree/217273cc48fd6e7469de7c09459ea921a8d9e833" target="_blank">217273c</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -619,6 +619,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/zouyuxin/susierss_diagnostic/blob/217273cc48fd6e7469de7c09459ea921a8d9e833/analysis/diagnostic_null.Rmd" target="_blank">217273c</a>
+</td>
+<td>
+zouyuxin
+</td>
+<td>
+2021-01-08
+</td>
+<td>
+wflow_publish(“analysis/diagnostic_null.Rmd”)
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/zouyuxin/susierss_diagnostic/683a2e754c642d80c6018f632776f569a838022c/docs/diagnostic_null.html" target="_blank">683a2e7</a>
+</td>
+<td>
+zouyuxin
+</td>
+<td>
+2021-01-06
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -693,6 +727,43 @@ abline(0,1)
 plot(out_sample_s2, out_refz_s2, xlab = &#39;LD = sample&#39;, ylab=&#39;LD = ref z&#39;)
 abline(0,1)</code></pre>
 <p><img src="figure/diagnostic_null.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-3-1">
+Past versions of unnamed-chunk-3-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-3-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/zouyuxin/susierss_diagnostic/blob/683a2e754c642d80c6018f632776f569a838022c/docs/figure/diagnostic_null.Rmd/unnamed-chunk-3-1.png" target="_blank">683a2e7</a>
+</td>
+<td>
+zouyuxin
+</td>
+<td>
+2021-01-06
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 <div id="check-sigma2-from-simple-1-s2-or-mle" class="section level2">
 <h2>Check <span class="math">\(\sigma^2\)</span> from simple (<span class="math">\(1-s^2\)</span>) or mle</h2>
@@ -706,7 +777,45 @@ out_ref_sigma2_1 = apply(out_ref, 1, function(x) x$susie_rss.res_simple$sigma2)
 out_ref_sigma2_2 = apply(out_ref, 1, function(x) x$susie_rss.res_mle$sigma2)
 plot(out_ref_sigma2_1, out_ref_sigma2_2, xlab=&#39;simple&#39;, ylab=&#39;mle&#39;, main=&#39;ref&#39;)
 abline(0,1)</code></pre>
-<p><img src="figure/diagnostic_null.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /> The estimated <span class="math">\(\sigma^2\)</span> from simple method and mle are very similar.</p>
+<p><img src="figure/diagnostic_null.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-4-1">
+Past versions of unnamed-chunk-4-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-4-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/zouyuxin/susierss_diagnostic/blob/683a2e754c642d80c6018f632776f569a838022c/docs/figure/diagnostic_null.Rmd/unnamed-chunk-4-1.png" target="_blank">683a2e7</a>
+</td>
+<td>
+zouyuxin
+</td>
+<td>
+2021-01-06
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>The estimated <span class="math">\(\sigma^2\)</span> from simple method and mle are very similar.</p>
 <p>We use <span class="math">\(\sigma^2\)</span> from simple method in the following checks.</p>
 </div>
 <div id="check-conditional-mean" class="section level2">
@@ -725,6 +834,43 @@ out_refz_prob = unlist(lapply(out_refz$susie_rss.res_simple, function(x) x$post$
 boxplot(abs(z-out_sample_mean), abs(z-out_ref_mean), abs(z-out_refz_mean), horizontal = TRUE, names=c(&#39;sample&#39;, &#39;ref&#39;, &#39;ref z&#39;), main=&#39;Difference between z and conditional mean&#39;, cex.main=0.8)
 boxplot(abs((z-out_sample_mean)/out_sample_sd), abs((z-out_ref_mean)/out_ref_sd), abs((z-out_refz_mean)/out_refz_sd), horizontal = TRUE, names=c(&#39;sample&#39;, &#39;ref&#39;, &#39;ref z&#39;), main=&#39;Standardized difference between z and conditional mean&#39;, cex.main=0.8)</code></pre>
 <p><img src="figure/diagnostic_null.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-5-1">
+Past versions of unnamed-chunk-5-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-5-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/zouyuxin/susierss_diagnostic/blob/683a2e754c642d80c6018f632776f569a838022c/docs/figure/diagnostic_null.Rmd/unnamed-chunk-5-1.png" target="_blank">683a2e7</a>
+</td>
+<td>
+zouyuxin
+</td>
+<td>
+2021-01-06
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 <div id="check-one-data-set" class="section level2">
 <h2>Check one data set</h2>
@@ -732,14 +878,88 @@ boxplot(abs((z-out_sample_mean)/out_sample_sd), abs((z-out_ref_mean)/out_ref_sd)
 sim = readRDS(&#39;output/rss_diagnostic_null/sim_gaussian_null/data_3_sim_gaussian_null_1.rds&#39;)
 sim$sumstats = readRDS(&#39;output/rss_diagnostic_null/get_sumstats/data_3_sim_gaussian_null_1_get_sumstats_1.rds&#39;)
 z = sim$sumstats$sumstats$betahat/sim$sumstats$sumstats$sebetahat</code></pre>
-<p>Using GBR sample LD, the estimated $^2 = $ 0.9999, the estimated $s^2 = $ 10^{-4}. Using IBS reference LD, the estimated $^2 = $ 0.8527, the estimated $s^2 = $ 0.1473. After adjusting for z, the estimated $^2 = $ 1, the estimated $s^2 = $ 0.</p>
+<p>Using GBR sample LD, the estimated <span class="math">\(\sigma^2 =\)</span> 0.9999, the estimated <span class="math">\(s^2 =\)</span> 10^{-4}. Using IBS reference LD, the estimated <span class="math">\(\sigma^2 =\)</span> 0.8527, the estimated <span class="math">\(s^2 =\)</span> 0.1473. After adjusting for z, the estimated <span class="math">\(\sigma^2 =\)</span> 1, the estimated <span class="math">\(s^2 =\)</span> 0.</p>
 <p>The 2 norm between 2 LD matrices is 32.1248872. The max norm between 2 LD matrices is 0.6278016.</p>
 <pre class="r"><code>plot(out_sample$susie_rss.Uz[[3]]^2, out_sample$susie_rss.ld_eigenval[[3]], xlab = &#39;U^T z&#39;, ylab = &#39;D&#39;, main=&#39;LD = GBR sample&#39;)
 abline(0,1)</code></pre>
 <p><img src="figure/diagnostic_null.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-7-1">
+Past versions of unnamed-chunk-7-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-7-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/zouyuxin/susierss_diagnostic/blob/683a2e754c642d80c6018f632776f569a838022c/docs/figure/diagnostic_null.Rmd/unnamed-chunk-7-1.png" target="_blank">683a2e7</a>
+</td>
+<td>
+zouyuxin
+</td>
+<td>
+2021-01-06
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>plot(out_ref$susie_rss.Uz[[3]]^2, out_ref$susie_rss.ld_eigenval[[3]], xlab = &#39;U^T z&#39;, ylab = &#39;D&#39;, main=&#39;LD = IBS ref&#39;)
 abline(0,1)</code></pre>
 <p><img src="figure/diagnostic_null.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-8-1">
+Past versions of unnamed-chunk-8-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-8-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/zouyuxin/susierss_diagnostic/blob/683a2e754c642d80c6018f632776f569a838022c/docs/figure/diagnostic_null.Rmd/unnamed-chunk-8-1.png" target="_blank">683a2e7</a>
+</td>
+<td>
+zouyuxin
+</td>
+<td>
+2021-01-06
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>z_sample_mean = out_sample$susie_rss.res_simple[[3]]$post$postmean
 z_sample_sd = sqrt(out_sample$susie_rss.res_simple[[3]]$post$postvar)
 z_sample_prob = out_sample$susie_rss.res_simple[[3]]$post$prob
@@ -751,8 +971,82 @@ z_refz_sd = sqrt(out_refz$susie_rss.res_simple[[3]]$post$postvar)
 z_refz_prob = out_refz$susie_rss.res_simple[[3]]$post$prob
 boxplot(abs(z-z_sample_mean), abs(z-z_ref_mean), abs(z-z_refz_mean), horizontal = TRUE, names=c(&#39;sample&#39;, &#39;ref&#39;, &#39;ref z&#39;), main=&#39;Difference between z and conditional mean&#39;)</code></pre>
 <p><img src="figure/diagnostic_null.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-9-1">
+Past versions of unnamed-chunk-9-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-9-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/zouyuxin/susierss_diagnostic/blob/683a2e754c642d80c6018f632776f569a838022c/docs/figure/diagnostic_null.Rmd/unnamed-chunk-9-1.png" target="_blank">683a2e7</a>
+</td>
+<td>
+zouyuxin
+</td>
+<td>
+2021-01-06
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>boxplot(abs((z-z_sample_mean)/z_sample_sd), abs((z-z_ref_mean)/z_ref_sd), abs((z-z_refz_mean)/z_refz_sd), horizontal = TRUE, names=c(&#39;sample&#39;, &#39;ref&#39;, &#39;ref z&#39;), main=&#39;Standardized difference between z and conditional mean&#39;)</code></pre>
 <p><img src="figure/diagnostic_null.Rmd/unnamed-chunk-9-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-9-2">
+Past versions of unnamed-chunk-9-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-9-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/zouyuxin/susierss_diagnostic/blob/683a2e754c642d80c6018f632776f569a838022c/docs/figure/diagnostic_null.Rmd/unnamed-chunk-9-2.png" target="_blank">683a2e7</a>
+</td>
+<td>
+zouyuxin
+</td>
+<td>
+2021-01-06
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
