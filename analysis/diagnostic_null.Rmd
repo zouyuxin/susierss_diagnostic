@@ -118,12 +118,12 @@ Using GBR sample LD, the estimated $\sigma^2 =$ `r round(out_sample$susie_rss.re
 The 2 norm between 2 LD matrices is `r out_sample$data.r_2norm[3]`. The max norm between 2 LD matrices is `r out_sample$data.r_maxnorm[3]`.
 
 ```{r}
-plot(out_sample$susie_rss.Uz[[3]]^2, out_sample$susie_rss.ld_eigenval[[3]], xlab = 'U^T z', ylab = 'D', main='LD = GBR sample')
+plot(out_sample$susie_rss.Uz[[3]]^2, out_sample$susie_rss.ld_eigenval[[3]], xlab = '(U^T z)^2', ylab = 'D', main='LD = GBR sample')
 abline(0,1)
 ```
 
 ```{r}
-plot(out_ref$susie_rss.Uz[[3]]^2, out_ref$susie_rss.ld_eigenval[[3]], xlab = 'U^T z', ylab = 'D', main='LD = IBS ref')
+plot(out_ref$susie_rss.Uz[[3]]^2, out_ref$susie_rss.ld_eigenval[[3]], xlab = '(U^T z)^2', ylab = 'D', main='LD = IBS ref')
 abline(0,1)
 ```
 
