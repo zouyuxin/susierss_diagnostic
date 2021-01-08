@@ -546,16 +546,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomzouyuxinsusierssdiagnostictree217273cc48fd6e7469de7c09459ea921a8d9e833targetblank217273ca"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/zouyuxin/susierss_diagnostic/tree/217273cc48fd6e7469de7c09459ea921a8d9e833" target="_blank">217273c</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomzouyuxinsusierssdiagnostictreeda5e5e28dfd31c1b951548a00ce7197b9026421ftargetblankda5e5e2a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/zouyuxin/susierss_diagnostic/tree/da5e5e28dfd31c1b951548a00ce7197b9026421f" target="_blank">da5e5e2</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomzouyuxinsusierssdiagnostictree217273cc48fd6e7469de7c09459ea921a8d9e833targetblank217273ca" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomzouyuxinsusierssdiagnostictreeda5e5e28dfd31c1b951548a00ce7197b9026421ftargetblankda5e5e2a" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/zouyuxin/susierss_diagnostic/tree/217273cc48fd6e7469de7c09459ea921a8d9e833" target="_blank">217273c</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/zouyuxin/susierss_diagnostic/tree/da5e5e28dfd31c1b951548a00ce7197b9026421f" target="_blank">da5e5e2</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -619,6 +619,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/zouyuxin/susierss_diagnostic/blob/da5e5e28dfd31c1b951548a00ce7197b9026421f/analysis/diagnostic_null.Rmd" target="_blank">da5e5e2</a>
+</td>
+<td>
+zouyuxin
+</td>
+<td>
+2021-01-08
+</td>
+<td>
+wflow_publish(“analysis/diagnostic_null.Rmd”)
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/zouyuxin/susierss_diagnostic/1fa8537f391588accc2d40252db9350400ebb958/docs/diagnostic_null.html" target="_blank">1fa8537</a>
+</td>
+<td>
+zouyuxin
+</td>
+<td>
+2021-01-08
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -880,7 +914,7 @@ sim$sumstats = readRDS(&#39;output/rss_diagnostic_null/get_sumstats/data_3_sim_g
 z = sim$sumstats$sumstats$betahat/sim$sumstats$sumstats$sebetahat</code></pre>
 <p>Using GBR sample LD, the estimated <span class="math">\(\sigma^2 =\)</span> 0.9999, the estimated <span class="math">\(s^2 =\)</span> 10^{-4}. Using IBS reference LD, the estimated <span class="math">\(\sigma^2 =\)</span> 0.8527, the estimated <span class="math">\(s^2 =\)</span> 0.1473. After adjusting for z, the estimated <span class="math">\(\sigma^2 =\)</span> 1, the estimated <span class="math">\(s^2 =\)</span> 0.</p>
 <p>The 2 norm between 2 LD matrices is 32.1248872. The max norm between 2 LD matrices is 0.6278016.</p>
-<pre class="r"><code>plot(out_sample$susie_rss.Uz[[3]]^2, out_sample$susie_rss.ld_eigenval[[3]], xlab = &#39;U^T z&#39;, ylab = &#39;D&#39;, main=&#39;LD = GBR sample&#39;)
+<pre class="r"><code>plot(out_sample$susie_rss.Uz[[3]]^2, out_sample$susie_rss.ld_eigenval[[3]], xlab = &#39;(U^T z)^2&#39;, ylab = &#39;D&#39;, main=&#39;LD = GBR sample&#39;)
 abline(0,1)</code></pre>
 <p><img src="figure/diagnostic_null.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>
@@ -920,7 +954,7 @@ zouyuxin
 </table>
 </div>
 </div>
-<pre class="r"><code>plot(out_ref$susie_rss.Uz[[3]]^2, out_ref$susie_rss.ld_eigenval[[3]], xlab = &#39;U^T z&#39;, ylab = &#39;D&#39;, main=&#39;LD = IBS ref&#39;)
+<pre class="r"><code>plot(out_ref$susie_rss.Uz[[3]]^2, out_ref$susie_rss.ld_eigenval[[3]], xlab = &#39;(U^T z)^2&#39;, ylab = &#39;D&#39;, main=&#39;LD = IBS ref&#39;)
 abline(0,1)</code></pre>
 <p><img src="figure/diagnostic_null.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>
