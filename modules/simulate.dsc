@@ -6,7 +6,7 @@ sim_gaussian: simulate.R + \
                 meta$true_coef = as.matrix(res$beta);
                 meta$residual_variance = res$sigma_std)
   X: $X
-  pve: 0.01
+  pve: 0.1
   n_signal: 1
   $Y: res$Y
   $meta: meta

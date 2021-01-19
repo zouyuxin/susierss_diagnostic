@@ -2,8 +2,9 @@
 
 diagnostic: diagnostic.R
   ld: $ld
-  sumstats: $sumstats
-  ld_type: 'sample', 'ref'
+  z: $z
+  ld_type: "sample", "r.IBS", "r.CLM"
+  z_ld_weight: 0, 0.006667, 0.009346
   $ld_eigenval: eigenld$values
   $U1z: zcol_sub
   $U0z: znull_sub
