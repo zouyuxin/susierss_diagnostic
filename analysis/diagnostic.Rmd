@@ -1,0 +1,549 @@
+---
+title: "SuSiE RSS Diagnostic"
+author: "Yuxin Zou"
+date: "1/19/2021"
+output: 
+  workflowr::wflow_html:
+    code_folding: hide
+---
+
+In diagnostic, we assume the following model
+$$
+\hat{z} \sim N(Rz, \sigma^2 R + s^2 I), \sigma^2 + s^2 \leq 1.
+$$
+Let $R = U D U^\intercal$ be eigen-decomposition of $R$, $D$ has $p_1$ positive diagonal elements, $U = [U_1 \ U_2]$, $U_1$ is a $p$ by $p_1$ matrix, $U2$ is a $p$ by $p_2=p-p_1$ matrix. We transform $\hat{z}$ into null space of $R$ by multiplying $U_2^\intercal$
+$$
+U_2^T \hat{z} \sim N(0, s^2 I_{p_2}).
+$$
+Therefore, $s^2$ can be estimated as $\frac{1}{p_2} \hat{z}^\intercal U_2 U_2^\intercal \hat{z}$. We estimate $\sigma^2$ by $1-s^2$.
+
+With $\sigma^2$ and $s^2$, the posterior distribution of $\hat{z}_j | \hat{z}_{-j}$ is as following:
+$$
+\hat{z}_j | \hat{z}_{-j} \sim N(-\frac{1}{\Omega_{jj}} \Omega_{j,-j} \hat{z}_{-j},1/\Omega_{jj}), \Omega = (\sigma^2 R + s^2 I)^{-1}
+$$
+
+The estimated $s^2$ could be very small, which leads to small variance in the posterior distribution. In the simulation, we tried truncated method, $s^2 = max(0.005, s^2)$. We also tried to estimate $s^2$ from pseudo likelihood using conditional distributions.
+
+In the following simulation, we extract 200 regions from 1000 Genome data using GBR (British in England and Scotland), IBS (Iberian Populations in Spain) and CLM (Colombians in Medellin, Colombia) population. We got 1000 Genome genotypes from ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/supporting/hd_genotype_chip, ALL.chip.omni_broad_sanger_combined.20140818.snps.genotypes.vcf.gz. The VCF file is converted to bed format using plink. We removed related samples. There are 103 GBR samples, 150 IBS samples and 107 CLM samples. We generated z scores based on GBR samples and we want to detect the inconsistency between z scores and LD (from GBR, IBS or CLM). 
+
+In summary, a large $s^2$ indicates that the z scores and LD matrix are mismatched. One mismatch is that the LD matrix is from the reference panel. The $s^2$ using LD from CLM is larger than the one using LD from IBS. The other mismatch is that some SNPs have flipped z scores.
+
+```{r}
+library(tibble)
+library(dplyr)
+out = readRDS('data/susierss_diagnostic_query.rds')
+out = as_tibble(out)
+out_null = out %>% filter(simulate.n_signal == 0, flip_z.flip == FALSE)
+out_signal = out %>% filter(simulate.n_signal == 1, flip_z.flip == FALSE)
+out_null_flip = out %>% filter(simulate.n_signal == 0, 
+                               flip_z.flip == TRUE, 
+                               flip_z.flip_pos == 'null')
+out_signal_flip_null = out %>% filter(simulate.n_signal == 1, 
+                               flip_z.flip == TRUE, 
+                               flip_z.flip_pos == 'null')
+out_signal_flip_signal = out %>% filter(simulate.n_signal == 1, 
+                               flip_z.flip == TRUE, 
+                               flip_z.flip_pos == 'signal')
+```
+
+```{r}
+out_null_sample = out_null %>% filter(susie_rss.ld_type == 'sample', susie_rss.correct_ld == FALSE)
+```
+
+Here is a summary of number of SNPs in each region:
+```{r}
+summary(sapply(out_null_sample$diagnostic.res1_simple, function(x) nrow(x$post)))
+```
+
+## Simulation under null (z = 0)
+
+```{r}
+out_null_sample = out_null %>% filter(susie_rss.ld_type == 'sample', susie_rss.correct_ld == FALSE)
+out_null_IBS = out_null %>% filter(susie_rss.ld_type == 'IBS', susie_rss.correct_ld == FALSE)
+out_null_CLM = out_null %>% filter(susie_rss.ld_type == 'CLM', susie_rss.correct_ld == FALSE)
+out_null_IBSz = out_null %>% filter(susie_rss.ld_type == 'IBS', susie_rss.correct_ld == TRUE)
+out_null_CLMz = out_null %>% filter(susie_rss.ld_type == 'CLM', susie_rss.correct_ld == TRUE)
+```
+
+### Check $s^2$
+
+```{r}
+par(mfrow=c(2,3))
+out_null_sample_s2 = apply(out_null_sample, 1, function(x) x$diagnostic.res1_simple$s2)
+out_null_sample_s2_pseudo = apply(out_null_sample, 1, function(x) x$diagnostic.res3$s2)
+out_null_IBS_s2 = apply(out_null_IBS, 1, function(x) x$diagnostic.res1_simple$s2)
+out_null_IBS_s2_pseudo = apply(out_null_IBS, 1, function(x) x$diagnostic.res3$s2)
+out_null_CLM_s2 = apply(out_null_CLM, 1, function(x) x$diagnostic.res1_simple$s2)
+out_null_CLM_s2_pseudo = apply(out_null_CLM, 1, function(x) x$diagnostic.res3$s2)
+
+# out_null_IBSz_s2 = apply(out_null_IBSz, 1, function(x) x$diagnostic.res1_simple$s2)
+# out_null_CLMz_s2 = apply(out_null_CLMz, 1, function(x) x$diagnostic.res1_simple$s2)
+
+plot(out_null_sample_s2, out_null_IBS_s2, xlab = 'LD = GBR', ylab='LD = IBS', main='GBR z scores')
+abline(0,1)
+plot(out_null_sample_s2, out_null_CLM_s2, xlab = 'LD = GBR', ylab='LD = CLM', main='GBR z scores')
+abline(0,1)
+plot(out_null_IBS_s2, out_null_CLM_s2, xlab = 'LD = IBS', ylab='LD = CLM', main='GBR z scores')
+abline(0,1)
+
+# plot(out_null_sample_s2, out_null_IBSz_s2, xlab = 'LD = GBR', ylab='LD = IBS z', main='GBR z scores')
+# abline(0,1)
+# plot(out_null_sample_s2, out_null_CLMz_s2, xlab = 'LD = GBR', ylab='LD = CLM z', main='GBR z scores')
+# abline(0,1)
+
+plot(out_null_sample_s2, out_null_sample_s2_pseudo, xlab = 'MLE', ylab='pseudo likelihood', main='GBR')
+abline(0,1)
+plot(out_null_IBS_s2, out_null_IBS_s2_pseudo, xlab = 'MLE', ylab='pseudo likelihood', main='IBS')
+abline(0,1)
+plot(out_null_CLM_s2, out_null_CLM_s2_pseudo, xlab = 'MLE', ylab='pseudo likelihood', main='CLM')
+abline(0,1)
+```
+
+The $s^2$ from pseudo likelihood is similar to the standard MLE estimates.
+
+### Check conditional mean
+
+```{r}
+z = unlist(lapply(out_null_sample$diagnostic.res1_simple, function(x) x$post$z))
+out_null_sample_mean = unlist(lapply(out_null_sample$diagnostic.res1_simple, function(x) x$post$postmean))
+out_null_sample_z = unlist(lapply(out_null_sample$diagnostic.res1_simple, function(x) x$post$post_z))
+out_null_IBS_mean = unlist(lapply(out_null_IBS$diagnostic.res1_simple, function(x) x$post$postmean))
+out_null_IBS_z = unlist(lapply(out_null_IBS$diagnostic.res1_simple, function(x) x$post$post_z))
+out_null_CLM_mean = unlist(lapply(out_null_CLM$diagnostic.res1_simple, function(x) x$post$postmean))
+out_null_CLM_z = unlist(lapply(out_null_CLM$diagnostic.res1_simple, function(x) x$post$post_z))
+
+out_null_sample_trun_mean = unlist(lapply(out_null_sample$diagnostic.res2, function(x) x$post$postmean))
+out_null_sample_trun_z = unlist(lapply(out_null_sample$diagnostic.res2, function(x) x$post$post_z))
+out_null_IBS_trun_mean = unlist(lapply(out_null_IBS$diagnostic.res2, function(x) x$post$postmean))
+out_null_IBS_trun_z = unlist(lapply(out_null_IBS$diagnostic.res2, function(x) x$post$post_z))
+out_null_CLM_trun_mean = unlist(lapply(out_null_CLM$diagnostic.res2, function(x) x$post$postmean))
+out_null_CLM_trun_z = unlist(lapply(out_null_CLM$diagnostic.res2, function(x) x$post$post_z))
+
+out_null_sample_pseudo_mean = unlist(lapply(out_null_sample$diagnostic.res3, function(x) x$post$postmean))
+out_null_sample_pseudo_z = unlist(lapply(out_null_sample$diagnostic.res3, function(x) x$post$post_z))
+out_null_IBS_pseudo_mean = unlist(lapply(out_null_IBS$diagnostic.res3, function(x) x$post$postmean))
+out_null_IBS_pseudo_z = unlist(lapply(out_null_IBS$diagnostic.res3, function(x) x$post$post_z))
+out_null_CLM_pseudo_mean = unlist(lapply(out_null_CLM$diagnostic.res3, function(x) x$post$postmean))
+out_null_CLM_pseudo_z = unlist(lapply(out_null_CLM$diagnostic.res3, function(x) x$post$post_z))
+```
+
+MLE $s^2$:
+```{r}
+par(mfrow=c(2,3))
+# MLE
+diff_sample = z-out_null_sample_mean; diff_IBS = z-out_null_IBS_mean; diff_CLM = z-out_null_CLM_mean; 
+ymax = ceiling(max(c(diff_sample, diff_IBS, diff_CLM))); ymin = floor(min(c(diff_sample, diff_IBS, diff_CLM)))
+plot(diff_sample, ylab='difference using GBR LD', main='Difference (z from GBR)',cex=0.6, ylim = c(ymin, ymax))
+plot(diff_IBS, ylab='difference using IBS LD', ylim = c(ymin, ymax))
+plot(diff_CLM, ylab='difference using CLM LD', ylim = c(ymin, ymax))
+
+ymax = ceiling(max(c(out_null_sample_z, out_null_IBS_z, out_null_CLM_z))); ymin = floor(min(c(out_null_sample_z, out_null_IBS_z, out_null_CLM_z)))
+plot(out_null_sample_z, ylab='standardized difference using GBR LD', main='Standardized Difference',cex=0.6, ylim = c(ymin, ymax))
+plot(out_null_IBS_z, ylab='standardized difference using IBS LD', ylim = c(ymin, ymax))
+plot(out_null_CLM_z, ylab='standardized difference using CLM LD', ylim = c(ymin, ymax))
+```
+
+Truncated $s^2$:
+```{r}
+par(mfrow=c(2,3))
+# truncate
+diff_sample = z-out_null_sample_trun_mean; diff_IBS = z-out_null_IBS_trun_mean; diff_CLM = z-out_null_CLM_trun_mean; 
+ymax = ceiling(max(c(diff_sample, diff_IBS, diff_CLM))); ymin = floor(min(c(diff_sample, diff_IBS, diff_CLM)))
+plot(diff_sample, ylab='difference using GBR LD', main='Difference (z from GBR)',cex=0.6, ylim = c(ymin, ymax))
+plot(diff_IBS, ylab='difference using IBS LD', ylim = c(ymin, ymax))
+plot(diff_CLM, ylab='difference using CLM LD', ylim = c(ymin, ymax))
+
+ymax = ceiling(max(c(out_null_sample_trun_z, out_null_IBS_trun_z, out_null_CLM_trun_z))); ymin = floor(min(c(out_null_sample_trun_z, out_null_IBS_trun_z, out_null_CLM_trun_z)))
+plot(out_null_sample_trun_z, ylab='standardized difference using GBR LD', main='Standardized Difference',cex=0.6, ylim = c(ymin, ymax))
+plot(out_null_IBS_trun_z, ylab='standardized difference using IBS LD', ylim = c(ymin, ymax))
+plot(out_null_CLM_trun_z, ylab='standardized difference using CLM LD', ylim = c(ymin, ymax))
+```
+
+Pseudo likelihood $s^2$:
+```{r}
+par(mfrow=c(2,3))
+# pseudo
+diff_sample = z-out_null_sample_pseudo_mean; diff_IBS = z-out_null_IBS_pseudo_mean; diff_CLM = z-out_null_CLM_pseudo_mean; 
+ymax = ceiling(max(c(diff_sample, diff_IBS, diff_CLM))); ymin = floor(min(c(diff_sample, diff_IBS, diff_CLM)))
+plot(diff_sample, ylab='difference using GBR LD', main='Difference (z from GBR)',cex=0.6, ylim = c(ymin, ymax))
+plot(diff_IBS, ylab='difference using IBS LD', ylim = c(ymin, ymax))
+plot(diff_CLM, ylab='difference using CLM LD', ylim = c(ymin, ymax))
+
+ymax = ceiling(max(c(out_null_sample_pseudo_z, out_null_IBS_pseudo_z, out_null_CLM_pseudo_z))); ymin = floor(min(c(out_null_sample_pseudo_z, out_null_IBS_pseudo_z, out_null_CLM_pseudo_z)))
+plot(out_null_sample_pseudo_z, ylab='standardized difference using GBR LD', main='Standardized Difference',cex=0.6, ylim = c(ymin, ymax))
+plot(out_null_IBS_pseudo_z, ylab='standardized difference using IBS LD', ylim = c(ymin, ymax))
+plot(out_null_CLM_pseudo_z, ylab='standardized difference using CLM LD', ylim = c(ymin, ymax))
+```
+
+## Simulation under null (z = 0) with one flipped sign
+
+```{r}
+out_null_flip_sample = out_null_flip %>% filter(susie_rss.ld_type == 'sample', susie_rss.correct_ld == FALSE)
+out_null_flip_IBS = out_null_flip %>% filter(susie_rss.ld_type == 'IBS', susie_rss.correct_ld == FALSE)
+out_null_flip_CLM = out_null_flip %>% filter(susie_rss.ld_type == 'CLM', susie_rss.correct_ld == FALSE)
+```
+
+### Check $s^2$
+
+```{r}
+par(mfrow=c(2,3))
+out_null_flip_sample_s2 = apply(out_null_flip_sample, 1, function(x) x$diagnostic.res1_simple$s2)
+out_null_flip_sample_s2_pseudo = apply(out_null_flip_sample, 1, function(x) x$diagnostic.res3$s2)
+out_null_flip_IBS_s2 = apply(out_null_flip_IBS, 1, function(x) x$diagnostic.res1_simple$s2)
+out_null_flip_IBS_s2_pseudo = apply(out_null_flip_IBS, 1, function(x) x$diagnostic.res3$s2)
+out_null_flip_CLM_s2 = apply(out_null_flip_CLM, 1, function(x) x$diagnostic.res1_simple$s2)
+out_null_flip_CLM_s2_pseudo = apply(out_null_flip_CLM, 1, function(x) x$diagnostic.res3$s2)
+
+plot(out_null_flip_sample_s2, out_null_flip_IBS_s2, xlab = 'LD = GBR', ylab='LD = IBS', main='GBR z scores')
+abline(0,1)
+plot(out_null_flip_sample_s2, out_null_flip_CLM_s2, xlab = 'LD = GBR', ylab='LD = CLM', main='GBR z scores')
+abline(0,1)
+plot(out_null_flip_IBS_s2, out_null_flip_CLM_s2, xlab = 'LD = IBS', ylab='LD = CLM', main='GBR z scores')
+abline(0,1)
+
+plot(out_null_flip_sample_s2, out_null_flip_sample_s2_pseudo, xlab = 'MLE', ylab='pseudo likelihood', main='GBR')
+abline(0,1)
+plot(out_null_flip_IBS_s2, out_null_flip_IBS_s2_pseudo, xlab = 'MLE', ylab='pseudo likelihood', main='IBS')
+abline(0,1)
+plot(out_null_flip_CLM_s2, out_null_flip_CLM_s2_pseudo, xlab = 'MLE', ylab='pseudo likelihood', main='CLM')
+abline(0,1)
+```
+
+Comparing the estimated MLE $s^2$ with non-flipped sign:
+```{r}
+plot(out_null_sample_s2, out_null_flip_sample_s2, xlab='non-flip', ylab='flip', main='GBR s2')
+abline(0,1)
+```
+
+
+### Check conditional mean
+
+```{r}
+z_flip = unlist(lapply(out_null_flip_sample$diagnostic.res1_simple, function(x) x$post$z))
+out_null_flip_sample_mean = unlist(lapply(out_null_flip_sample$diagnostic.res1_simple, function(x) x$post$postmean))
+out_null_flip_sample_z = unlist(lapply(out_null_flip_sample$diagnostic.res1_simple, function(x) x$post$post_z))
+out_null_flip_IBS_mean = unlist(lapply(out_null_flip_IBS$diagnostic.res1_simple, function(x) x$post$postmean))
+out_null_flip_IBS_z = unlist(lapply(out_null_flip_IBS$diagnostic.res1_simple, function(x) x$post$post_z))
+out_null_flip_CLM_mean = unlist(lapply(out_null_flip_CLM$diagnostic.res1_simple, function(x) x$post$postmean))
+out_null_flip_CLM_z = unlist(lapply(out_null_flip_CLM$diagnostic.res1_simple, function(x) x$post$post_z))
+
+out_null_flip_sample_trun_mean = unlist(lapply(out_null_flip_sample$diagnostic.res2, function(x) x$post$postmean))
+out_null_flip_sample_trun_z = unlist(lapply(out_null_flip_sample$diagnostic.res2, function(x) x$post$post_z))
+out_null_flip_IBS_trun_mean = unlist(lapply(out_null_flip_IBS$diagnostic.res2, function(x) x$post$postmean))
+out_null_flip_IBS_trun_z = unlist(lapply(out_null_flip_IBS$diagnostic.res2, function(x) x$post$post_z))
+out_null_flip_CLM_trun_mean = unlist(lapply(out_null_flip_CLM$diagnostic.res2, function(x) x$post$postmean))
+out_null_flip_CLM_trun_z = unlist(lapply(out_null_flip_CLM$diagnostic.res2, function(x) x$post$post_z))
+
+out_null_flip_sample_pseudo_mean = unlist(lapply(out_null_flip_sample$diagnostic.res3, function(x) x$post$postmean))
+out_null_flip_sample_pseudo_z = unlist(lapply(out_null_flip_sample$diagnostic.res3, function(x) x$post$post_z))
+out_null_flip_IBS_pseudo_mean = unlist(lapply(out_null_flip_IBS$diagnostic.res3, function(x) x$post$postmean))
+out_null_flip_IBS_pseudo_z = unlist(lapply(out_null_flip_IBS$diagnostic.res3, function(x) x$post$post_z))
+out_null_flip_CLM_pseudo_mean = unlist(lapply(out_null_flip_CLM$diagnostic.res3, function(x) x$post$postmean))
+out_null_flip_CLM_pseudo_z = unlist(lapply(out_null_flip_CLM$diagnostic.res3, function(x) x$post$post_z))
+```
+
+MLE $s^2$:
+```{r}
+par(mfrow=c(2,3))
+idx = which(z != z_flip)
+diff_sample = z_flip-out_null_flip_sample_mean; diff_IBS = z_flip-out_null_flip_IBS_mean; diff_CLM = z_flip-out_null_flip_CLM_mean;
+ymax = ceiling(max(c(diff_sample, diff_IBS, diff_CLM))); ymin = floor(min(c(diff_sample, diff_IBS, diff_CLM)))
+plot(diff_sample, ylab='difference using GBR LD', main='Difference (z from GBR)', cex=0.6, ylim = c(ymin, ymax))
+points(idx, diff_sample[idx], col='red', pch=16)
+plot(diff_IBS, ylab='difference using IBS LD', ylim = c(ymin, ymax))
+points(idx, diff_IBS[idx], col='red', pch=16)
+plot(diff_CLM, ylab='difference using CLM LD', ylim = c(ymin, ymax))
+points(idx, diff_CLM[idx], col='red', pch=16)
+
+ymax = ceiling(max(c(out_null_flip_sample_z, out_null_flip_IBS_z, out_null_flip_CLM_z))); ymin = floor(min(c(out_null_flip_sample_z, out_null_flip_IBS_z, out_null_flip_CLM_z)))
+plot(out_null_flip_sample_z, ylab='standardized difference using GBR LD', main='Standardized Difference', cex=0.6, ylim = c(ymin, ymax))
+points(idx, out_null_flip_sample_z[idx], col='red', pch=16)
+plot(out_null_flip_IBS_z, ylab='standardized difference using IBS LD', ylim = c(ymin, ymax))
+points(idx, out_null_flip_IBS_z[idx], col='red', pch=16)
+plot(out_null_flip_CLM_z, ylab='standardized difference using CLM LD', ylim = c(ymin, ymax))
+points(idx, out_null_flip_CLM_z[idx], col='red', pch=16)
+```
+
+Truncated $s^2$:
+```{r}
+par(mfrow=c(2,3))
+diff_sample = z_flip-out_null_flip_sample_trun_mean; diff_IBS = z_flip-out_null_flip_IBS_trun_mean; diff_CLM = z_flip-out_null_flip_CLM_trun_mean;
+ymax = ceiling(max(c(diff_sample, diff_IBS, diff_CLM))); ymin = floor(min(c(diff_sample, diff_IBS, diff_CLM)))
+plot(diff_sample, ylab='difference using GBR LD', main='Difference (z from GBR)', cex=0.6, ylim = c(ymin, ymax))
+points(idx, diff_sample[idx], col='red', pch=16)
+plot(diff_IBS, ylab='difference using IBS LD', ylim = c(ymin, ymax))
+points(idx, diff_IBS[idx], col='red', pch=16)
+plot(diff_CLM, ylab='difference using CLM LD', ylim = c(ymin, ymax))
+points(idx, diff_CLM[idx], col='red', pch=16)
+
+ymax = ceiling(max(c(out_null_flip_sample_trun_z, out_null_flip_IBS_trun_z, out_null_flip_CLM_trun_z))); ymin = floor(min(c(out_null_flip_sample_trun_z, out_null_flip_IBS_trun_z, out_null_flip_CLM_trun_z)))
+plot(out_null_flip_sample_trun_z, ylab='standardized difference using GBR LD', main='Standardized Difference', cex=0.6, ylim = c(ymin, ymax))
+points(idx, out_null_flip_sample_trun_z[idx], col='red', pch=16)
+plot(out_null_flip_IBS_trun_z, ylab='standardized difference using IBS LD', ylim = c(ymin, ymax))
+points(idx, out_null_flip_IBS_trun_z[idx], col='red', pch=16)
+plot(out_null_flip_CLM_trun_z, ylab='standardized difference using CLM LD', ylim = c(ymin, ymax))
+points(idx, out_null_flip_CLM_trun_z[idx], col='red', pch=16)
+```
+
+Pseudo likelihood $s^2$:
+```{r}
+par(mfrow=c(2,3))
+idx = which(z != z_flip)
+diff_sample = z_flip-out_null_flip_sample_pseudo_mean; diff_IBS = z_flip-out_null_flip_IBS_pseudo_mean; diff_CLM = z_flip-out_null_flip_CLM_pseudo_mean;
+ymax = ceiling(max(c(diff_sample, diff_IBS, diff_CLM))); ymin = floor(min(c(diff_sample, diff_IBS, diff_CLM)))
+plot(diff_sample, ylab='difference using GBR LD', main='Difference (z from GBR)', cex=0.6, ylim = c(ymin, ymax))
+points(idx, diff_sample[idx], col='red', pch=16)
+plot(diff_IBS, ylab='difference using IBS LD', ylim = c(ymin, ymax))
+points(idx, diff_IBS[idx], col='red', pch=16)
+plot(diff_CLM, ylab='difference using CLM LD', ylim = c(ymin, ymax))
+points(idx, diff_CLM[idx], col='red', pch=16)
+
+ymax = ceiling(max(c(out_null_flip_sample_pseudo_z, out_null_flip_IBS_pseudo_z, out_null_flip_CLM_pseudo_z))); ymin = floor(min(c(out_null_flip_sample_pseudo_z, out_null_flip_IBS_pseudo_z, out_null_flip_CLM_pseudo_z)))
+plot(out_null_flip_sample_pseudo_z, ylab='standardized difference using GBR LD', main='Standardized Difference', cex=0.6, ylim = c(ymin, ymax))
+points(idx, out_null_flip_sample_pseudo_z[idx], col='red', pch=16)
+plot(out_null_flip_IBS_z, ylab='standardized difference using IBS LD', ylim = c(ymin, ymax))
+points(idx, out_null_flip_IBS_pseudo_z[idx], col='red', pch=16)
+plot(out_null_flip_CLM_z, ylab='standardized difference using CLM LD', ylim = c(ymin, ymax))
+points(idx, out_null_flip_CLM_pseudo_z[idx], col='red', pch=16)
+```
+
+## Simulation with signal
+
+```{r}
+out_sample = out_signal %>% filter(susie_rss.ld_type == 'sample', susie_rss.correct_ld == FALSE)
+out_IBS = out_signal %>% filter(susie_rss.ld_type == 'IBS', susie_rss.correct_ld == FALSE)
+out_CLM = out_signal %>% filter(susie_rss.ld_type == 'CLM', susie_rss.correct_ld == FALSE)
+out_IBSz = out_signal %>% filter(susie_rss.ld_type == 'IBS', susie_rss.correct_ld == TRUE)
+out_CLMz = out_signal %>% filter(susie_rss.ld_type == 'CLM', susie_rss.correct_ld == TRUE)
+```
+
+### Check $s^2$
+
+```{r}
+par(mfrow=c(2,3))
+out_sample_s2 = apply(out_sample, 1, function(x) x$diagnostic.res1_simple$s2)
+out_sample_s2_pseudo = apply(out_sample, 1, function(x) x$diagnostic.res3$s2)
+out_IBS_s2 = apply(out_IBS, 1, function(x) x$diagnostic.res1_simple$s2)
+out_IBS_s2_pseudo = apply(out_IBS, 1, function(x) x$diagnostic.res3$s2)
+out_CLM_s2 = apply(out_CLM, 1, function(x) x$diagnostic.res1_simple$s2)
+out_CLM_s2_pseudo = apply(out_CLM, 1, function(x) x$diagnostic.res3$s2)
+# out_IBSz_s2 = apply(out_IBSz, 1, function(x) x$diagnostic.res1_simple$s2)
+# out_CLMz_s2 = apply(out_CLMz, 1, function(x) x$diagnostic.res1_simple$s2)
+
+plot(out_sample_s2, out_IBS_s2, xlab = 'LD = GBR', ylab='LD = IBS', main='GBR z scores')
+abline(0,1)
+plot(out_sample_s2, out_CLM_s2, xlab = 'LD = GBR', ylab='LD = CLM', main='GBR z scores')
+abline(0,1)
+plot(out_IBS_s2, out_CLM_s2, xlab = 'LD = IBS', ylab='LD = CLM', main='GBR z scores')
+abline(0,1)
+
+plot(out_sample_s2, out_sample_s2_pseudo, xlab = 'MLE', ylab='psudo likelihood', main='GBR')
+abline(0,1)
+plot(out_IBS_s2, out_IBS_s2_pseudo, xlab = 'MLE', ylab='psudo likelihood', main='IBS')
+abline(0,1)
+plot(out_CLM_s2, out_CLM_s2_pseudo, xlab = 'MLE', ylab='psudo likelihood', main='CLM')
+abline(0,1)
+```
+
+### Check conditional mean
+
+```{r}
+z = unlist(lapply(out_sample$diagnostic.res1_simple, function(x) x$post$z))
+out_sample_mean = unlist(lapply(out_sample$diagnostic.res1_simple, function(x) x$post$postmean))
+out_sample_z = unlist(lapply(out_sample$diagnostic.res1_simple, function(x) x$post$post_z))
+# out_IBS_mean = unlist(lapply(out_IBS$diagnostic.res1_simple, function(x) x$post$postmean))
+# out_IBS_z = unlist(lapply(out_IBS$diagnostic.res1_simple, function(x) x$post$post_z))
+# out_CLM_mean = unlist(lapply(out_CLM$diagnostic.res1_simple, function(x) x$post$postmean))
+# out_CLM_z = unlist(lapply(out_CLM$diagnostic.res1_simple, function(x) x$post$post_z))
+
+out_sample_trun_mean = unlist(lapply(out_sample$diagnostic.res2, function(x) x$post$postmean))
+out_sample_trun_z = unlist(lapply(out_sample$diagnostic.res2, function(x) x$post$post_z))
+# out_IBS_trun_mean = unlist(lapply(out_IBS$diagnostic.res2, function(x) x$post$postmean))
+# out_IBS_trun_z = unlist(lapply(out_IBS$diagnostic.res2, function(x) x$post$post_z))
+# out_CLM_trun_mean = unlist(lapply(out_CLM$diagnostic.res2, function(x) x$post$postmean))
+# out_CLM_trun_z = unlist(lapply(out_CLM$diagnostic.res2, function(x) x$post$post_z))
+
+out_sample_pseudo_mean = unlist(lapply(out_sample$diagnostic.res3, function(x) x$post$postmean))
+out_sample_pseudo_z = unlist(lapply(out_sample$diagnostic.res3, function(x) x$post$post_z))
+# out_IBS_pseudo_mean = unlist(lapply(out_IBS$diagnostic.res3, function(x) x$post$postmean))
+# out_IBS_pseudo_z = unlist(lapply(out_IBS$diagnostic.res3, function(x) x$post$post_z))
+# out_CLM_pseudo_mean = unlist(lapply(out_CLM$diagnostic.res3, function(x) x$post$postmean))
+# out_CLM_pseudo_z = unlist(lapply(out_CLM$diagnostic.res3, function(x) x$post$post_z))
+```
+
+```{r}
+par(mfrow=c(2,3))
+diff_mle = z-out_sample_mean; diff_trun = z-out_sample_trun_mean; diff_pseudo = z-out_sample_pseudo_mean; 
+ymax = ceiling(max(c(diff_mle, diff_trun, diff_pseudo))); ymin = floor(min(c(diff_mle, diff_trun, diff_pseudo)))
+plot(diff_mle, ylab='difference', main='LD=GBR; MLE s2',cex=0.6, ylim = c(ymin, ymax))
+plot(diff_trun, ylab='difference', main='Truncated s2', ylim = c(ymin, ymax))
+plot(diff_pseudo, ylab='difference', main='Pseudo L s2', ylim = c(ymin, ymax))
+
+ymax = ceiling(max(c(out_sample_z, out_sample_trun_z, out_sample_pseudo_z))); ymin = floor(min(c(out_sample_z, out_sample_trun_z, out_sample_pseudo_z)))
+plot(out_sample_z, ylab='standardized difference', main='MLE s2',cex=0.6, ylim = c(ymin, ymax))
+plot(out_sample_trun_z, ylab='standardized difference', main='Truncated s2',ylim = c(ymin, ymax))
+plot(out_sample_pseudo_z, ylab='standardized difference', main='Pseudo L s2',ylim = c(ymin, ymax))
+```
+
+## Simulation with signal and flipped sign at signal
+
+```{r}
+out_flip_sample = out_signal_flip_signal %>% filter(susie_rss.ld_type == 'sample', susie_rss.correct_ld == FALSE)
+out_flip_IBS = out_signal_flip_signal %>% filter(susie_rss.ld_type == 'IBS', susie_rss.correct_ld == FALSE)
+out_flip_CLM = out_signal_flip_signal %>% filter(susie_rss.ld_type == 'CLM', susie_rss.correct_ld == FALSE)
+```
+
+### Check $s^2$
+
+```{r}
+par(mfrow=c(2,3))
+out_flip_sample_s2 = apply(out_flip_sample, 1, function(x) x$diagnostic.res1_simple$s2)
+out_flip_sample_s2_pseudo = apply(out_flip_sample, 1, function(x) x$diagnostic.res3$s2)
+out_flip_IBS_s2 = apply(out_flip_IBS, 1, function(x) x$diagnostic.res1_simple$s2)
+out_flip_IBS_s2_pseudo = apply(out_flip_IBS, 1, function(x) x$diagnostic.res3$s2)
+out_flip_CLM_s2 = apply(out_flip_CLM, 1, function(x) x$diagnostic.res1_simple$s2)
+out_flip_CLM_s2_pseudo = apply(out_flip_CLM, 1, function(x) x$diagnostic.res3$s2)
+
+plot(out_flip_sample_s2, out_flip_IBS_s2, xlab = 'LD = GBR', ylab='LD = IBS', main='GBR z scores')
+abline(0,1)
+plot(out_flip_sample_s2, out_flip_CLM_s2, xlab = 'LD = GBR', ylab='LD = CLM', main='GBR z scores')
+abline(0,1)
+plot(out_flip_IBS_s2, out_flip_CLM_s2, xlab = 'LD = IBS', ylab='LD = CLM', main='GBR z scores')
+abline(0,1)
+
+plot(out_flip_sample_s2, out_flip_sample_s2_pseudo, xlab = 'MLE', ylab='psudo likelihood', main='GBR')
+abline(0,1)
+plot(out_flip_IBS_s2, out_flip_IBS_s2_pseudo, xlab = 'MLE', ylab='psudo likelihood', main='IBS')
+abline(0,1)
+plot(out_flip_CLM_s2, out_flip_CLM_s2_pseudo, xlab = 'MLE', ylab='psudo likelihood', main='CLM')
+abline(0,1)
+```
+
+### Check conditional mean
+
+```{r}
+z_flip = unlist(lapply(out_flip_sample$diagnostic.res1_simple, function(x) x$post$z))
+out_flip_sample_mean = unlist(lapply(out_flip_sample$diagnostic.res1_simple, function(x) x$post$postmean))
+out_flip_sample_z = unlist(lapply(out_flip_sample$diagnostic.res1_simple, function(x) x$post$post_z))
+# out_flip_IBS_mean = unlist(lapply(out_flip_IBS$diagnostic.res1_simple, function(x) x$post$postmean))
+# out_flip_IBS_z = unlist(lapply(out_flip_IBS$diagnostic.res1_simple, function(x) x$post$post_z))
+# out_flip_CLM_mean = unlist(lapply(out_flip_CLM$diagnostic.res1_simple, function(x) x$post$postmean))
+# out_flip_CLM_z = unlist(lapply(out_flip_CLM$diagnostic.res1_simple, function(x) x$post$post_z))
+
+out_flip_sample_trun_mean = unlist(lapply(out_flip_sample$diagnostic.res2, function(x) x$post$postmean))
+out_flip_sample_trun_z = unlist(lapply(out_flip_sample$diagnostic.res2, function(x) x$post$post_z))
+# out_flip_IBS_trun_mean = unlist(lapply(out_flip_IBS$diagnostic.res2, function(x) x$post$postmean))
+# out_flip_IBS_trun_z = unlist(lapply(out_flip_IBS$diagnostic.res2, function(x) x$post$post_z))
+# out_flip_CLM_trun_mean = unlist(lapply(out_flip_CLM$diagnostic.res2, function(x) x$post$postmean))
+# out_flip_CLM_trun_z = unlist(lapply(out_flip_CLM$diagnostic.res2, function(x) x$post$post_z))
+
+out_flip_sample_pseudo_mean = unlist(lapply(out_flip_sample$diagnostic.res3, function(x) x$post$postmean))
+out_flip_sample_pseudo_z = unlist(lapply(out_flip_sample$diagnostic.res3, function(x) x$post$post_z))
+# out_flip_IBS_pseudo_mean = unlist(lapply(out_flip_IBS$diagnostic.res3, function(x) x$post$postmean))
+# out_flip_IBS_pseudo_z = unlist(lapply(out_flip_IBS$diagnostic.res3, function(x) x$post$post_z))
+# out_flip_CLM_pseudo_mean = unlist(lapply(out_flip_CLM$diagnostic.res3, function(x) x$post$postmean))
+# out_flip_CLM_pseudo_z = unlist(lapply(out_flip_CLM$diagnostic.res3, function(x) x$post$post_z))
+```
+
+```{r}
+par(mfrow=c(2,3))
+idx = which(z != z_flip)
+diff_mle = z_flip-out_flip_sample_mean; diff_trun = z_flip-out_flip_sample_trun_mean; diff_pseudo = z_flip-out_flip_sample_pseudo_mean; 
+ymax = ceiling(max(c(diff_mle, diff_trun, diff_pseudo))); ymin = floor(min(c(diff_mle, diff_trun, diff_pseudo)))
+plot(diff_mle, ylab='difference', main='LD=GBR; MLE s2',cex=0.6, ylim = c(ymin, ymax))
+points(idx, diff_mle[idx], col='red', pch=16)
+plot(diff_trun, ylab='difference', main='Truncated s2', ylim = c(ymin, ymax))
+points(idx, diff_trun[idx], col='red', pch=16)
+plot(diff_pseudo, ylab='difference', main='Pseudo L s2', ylim = c(ymin, ymax))
+points(idx, diff_pseudo[idx], col='red', pch=16)
+
+ymax = ceiling(max(c(out_flip_sample_z, out_flip_sample_trun_z, out_flip_sample_pseudo_z))); ymin = floor(min(c(out_flip_sample_z, out_flip_sample_trun_z, out_flip_sample_pseudo_z)))
+plot(out_flip_sample_z, ylab='standardized difference', main='MLE s2',cex=0.6, ylim = c(ymin, ymax))
+points(idx, out_flip_sample_z[idx], col='red', pch=16)
+plot(out_flip_sample_trun_z, ylab='standardized difference', main='Truncated s2',ylim = c(ymin, ymax))
+points(idx, out_flip_sample_trun_z[idx], col='red', pch=16)
+plot(out_flip_sample_pseudo_z, ylab='standardized difference', main='Pseudo L s2',ylim = c(ymin, ymax))
+points(idx, out_flip_sample_pseudo_z[idx], col='red', pch=16)
+```
+
+## Simulation with signal and flipped sign at null
+
+```{r}
+out_flip_null_sample = out_signal_flip_null %>% filter(susie_rss.ld_type == 'sample', susie_rss.correct_ld == FALSE)
+out_flip_null_IBS = out_signal_flip_null %>% filter(susie_rss.ld_type == 'IBS', susie_rss.correct_ld == FALSE)
+out_flip_null_CLM = out_signal_flip_null %>% filter(susie_rss.ld_type == 'CLM', susie_rss.correct_ld == FALSE)
+```
+
+### Check $s^2$
+
+```{r}
+par(mfrow=c(2,3))
+out_flip_null_sample_s2 = apply(out_flip_null_sample, 1, function(x) x$diagnostic.res1_simple$s2)
+out_flip_null_sample_s2_pseudo = apply(out_flip_null_sample, 1, function(x) x$diagnostic.res3$s2)
+out_flip_null_IBS_s2 = apply(out_flip_null_IBS, 1, function(x) x$diagnostic.res1_simple$s2)
+out_flip_null_IBS_s2_pseudo = apply(out_flip_null_IBS, 1, function(x) x$diagnostic.res3$s2)
+out_flip_null_CLM_s2 = apply(out_flip_null_CLM, 1, function(x) x$diagnostic.res1_simple$s2)
+out_flip_null_CLM_s2_pseudo = apply(out_flip_null_CLM, 1, function(x) x$diagnostic.res3$s2)
+
+plot(out_flip_null_sample_s2, out_flip_null_IBS_s2, xlab = 'LD = GBR', ylab='LD = IBS', main='GBR z scores')
+abline(0,1)
+plot(out_flip_null_sample_s2, out_flip_null_CLM_s2, xlab = 'LD = GBR', ylab='LD = CLM', main='GBR z scores')
+abline(0,1)
+plot(out_flip_null_IBS_s2, out_flip_null_CLM_s2, xlab = 'LD = IBS', ylab='LD = CLM', main='GBR z scores')
+abline(0,1)
+
+plot(out_flip_null_sample_s2, out_flip_null_sample_s2_pseudo, xlab = 'MLE', ylab='psudo likelihood', main='GBR')
+abline(0,1)
+plot(out_flip_null_IBS_s2, out_flip_null_IBS_s2_pseudo, xlab = 'MLE', ylab='psudo likelihood', main='IBS')
+abline(0,1)
+plot(out_flip_null_CLM_s2, out_flip_null_CLM_s2_pseudo, xlab = 'MLE', ylab='psudo likelihood', main='CLM')
+abline(0,1)
+```
+
+### Check conditional mean
+
+```{r}
+z_flip = unlist(lapply(out_flip_null_sample$diagnostic.res1_simple, function(x) x$post$z))
+out_flip_null_sample_mean = unlist(lapply(out_flip_null_sample$diagnostic.res1_simple, function(x) x$post$postmean))
+out_flip_null_sample_z = unlist(lapply(out_flip_null_sample$diagnostic.res1_simple, function(x) x$post$post_z))
+# out_flip_null_IBS_mean = unlist(lapply(out_flip_null_IBS$diagnostic.res1_simple, function(x) x$post$postmean))
+# out_flip_null_IBS_z = unlist(lapply(out_flip_null_IBS$diagnostic.res1_simple, function(x) x$post$post_z))
+# out_flip_null_CLM_mean = unlist(lapply(out_flip_null_CLM$diagnostic.res1_simple, function(x) x$post$postmean))
+# out_flip_null_CLM_z = unlist(lapply(out_flip_null_CLM$diagnostic.res1_simple, function(x) x$post$post_z))
+
+out_flip_null_sample_trun_mean = unlist(lapply(out_flip_null_sample$diagnostic.res2, function(x) x$post$postmean))
+out_flip_null_sample_trun_z = unlist(lapply(out_flip_null_sample$diagnostic.res2, function(x) x$post$post_z))
+# out_flip_null_IBS_trun_mean = unlist(lapply(out_flip_null_IBS$diagnostic.res2, function(x) x$post$postmean))
+# out_flip_null_IBS_trun_z = unlist(lapply(out_flip_null_IBS$diagnostic.res2, function(x) x$post$post_z))
+# out_flip_null_CLM_trun_mean = unlist(lapply(out_flip_null_CLM$diagnostic.res2, function(x) x$post$postmean))
+# out_flip_null_CLM_trun_z = unlist(lapply(out_flip_null_CLM$diagnostic.res2, function(x) x$post$post_z))
+
+out_flip_null_sample_pseudo_mean = unlist(lapply(out_flip_null_sample$diagnostic.res3, function(x) x$post$postmean))
+out_flip_null_sample_pseudo_z = unlist(lapply(out_flip_null_sample$diagnostic.res3, function(x) x$post$post_z))
+# out_flip_null_IBS_pseudo_mean = unlist(lapply(out_flip_null_IBS$diagnostic.res3, function(x) x$post$postmean))
+# out_flip_null_IBS_pseudo_z = unlist(lapply(out_flip_null_IBS$diagnostic.res3, function(x) x$post$post_z))
+# out_flip_null_CLM_pseudo_mean = unlist(lapply(out_flip_null_CLM$diagnostic.res3, function(x) x$post$postmean))
+# out_flip_null_CLM_pseudo_z = unlist(lapply(out_flip_null_CLM$diagnostic.res3, function(x) x$post$post_z))
+```
+
+```{r}
+par(mfrow=c(2,3))
+idx = which(z != z_flip)
+diff_mle = z_flip-out_flip_null_sample_mean; diff_trun = z_flip-out_flip_null_sample_trun_mean; diff_pseudo = z_flip-out_flip_null_sample_pseudo_mean; 
+ymax = ceiling(max(c(diff_mle, diff_trun, diff_pseudo))); ymin = floor(min(c(diff_mle, diff_trun, diff_pseudo)))
+plot(diff_mle, ylab='difference', main='LD=GBR; MLE s2',cex=0.6, ylim = c(ymin, ymax))
+points(idx, diff_mle[idx], col='red', pch=16)
+plot(diff_trun, ylab='difference', main='Truncated s2', ylim = c(ymin, ymax))
+points(idx, diff_trun[idx], col='red', pch=16)
+plot(diff_pseudo, ylab='difference', main='Pseudo L s2', ylim = c(ymin, ymax))
+points(idx, diff_pseudo[idx], col='red', pch=16)
+
+ymax = ceiling(max(c(out_flip_null_sample_z, out_flip_null_sample_trun_z, out_flip_null_sample_pseudo_z))); ymin = floor(min(c(out_flip_null_sample_z, out_flip_null_sample_trun_z, out_flip_null_sample_pseudo_z)))
+plot(out_flip_null_sample_z, ylab='standardized difference', main='MLE s2',cex=0.6, ylim = c(ymin, ymax))
+points(idx, out_flip_null_sample_z[idx], col='red', pch=16)
+plot(out_flip_null_sample_trun_z, ylab='standardized difference', main='Truncated s2',ylim = c(ymin, ymax))
+points(idx, out_flip_null_sample_trun_z[idx], col='red', pch=16)
+plot(out_flip_null_sample_pseudo_z, ylab='standardized difference', main='Pseudo L s2',ylim = c(ymin, ymax))
+points(idx, out_flip_null_sample_pseudo_z[idx], col='red', pch=16)
+```
+
