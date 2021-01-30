@@ -11,15 +11,15 @@ In diagnostic, we assume the following model
 $$
 \hat{z} \sim N(Rz, \sigma^2 R + s^2 I), \sigma^2 + s^2 \leq 1.
 $$
-Let $R = U D U^\intercal$ be eigen-decomposition of $R$, $D$ has $p_1$ positive diagonal elements, $U = [U_1 \ U_2]$, $U_1$ is a $p$ by $p_1$ matrix, $U2$ is a $p$ by $p_2=p-p_1$ matrix. We transform $\hat{z}$ into null space of $R$ by multiplying $U_2^\intercal$
+Let $R = U D U^\intercal$ be eigen-decomposition of $R$, $D$ has $p_1$ positive diagonal elements, $U = [U_1 \ U_2]$, $U_1$ is a $p$ by $p_1$ matrix, $U_2$ is a $p$ by $p_2=p-p_1$ matrix. We transform $\hat{z}$ into null space of $R$ by multiplying $U_2^\intercal$
 $$
 U_2^T \hat{z} \sim N(0, s^2 I_{p_2}).
 $$
 Therefore, $s^2$ can be estimated as $\frac{1}{p_2} \hat{z}^\intercal U_2 U_2^\intercal \hat{z}$. We estimate $\sigma^2$ by $1-s^2$.
 
-With $\sigma^2$ and $s^2$, the posterior distribution of $\hat{z}_j | \hat{z}_{-j}$ is as following:
+Under the null, the posterior distribution of $\hat{z}_j | \hat{z}_{-j}$ is:
 $$
-\hat{z}_j | \hat{z}_{-j} \sim N(-\frac{1}{\Omega_{jj}} \Omega_{j,-j} \hat{z}_{-j},1/\Omega_{jj}), \Omega = (\sigma^2 R + s^2 I)^{-1}
+\hat{z}_j | \hat{z}_{-j} \sim N(-\frac{1}{\Omega_{jj}} \Omega_{j,-j} \hat{z}_{-j},1/\Omega_{jj}), \Omega = (\sigma^2 R + s^2 I)^{-1}.
 $$
 
 The estimated $s^2$ could be very small, which leads to small variance in the posterior distribution. In the simulation, we tried truncated method, $s^2 = max(0.005, s^2)$. We also tried to estimate $s^2$ from pseudo likelihood using conditional distributions.
@@ -28,7 +28,7 @@ In the following simulation, we extract 200 regions from 1000 Genome data using 
 
 In summary, a large $s^2$ indicates that the z scores and LD matrix are mismatched. One mismatch is that the LD matrix is from the reference panel. The $s^2$ using LD from CLM is larger than the one using LD from IBS. The other mismatch is that some SNPs have flipped z scores.
 
-```{r}
+```{r message=FALSE}
 library(tibble)
 library(dplyr)
 out = readRDS('data/susierss_diagnostic_query.rds')
