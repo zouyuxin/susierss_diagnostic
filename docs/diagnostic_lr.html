@@ -427,7 +427,7 @@ div.tocify {
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2021-02-09
+<strong>Last updated:</strong> 2021-02-10
 </p>
 <p>
 <strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
@@ -518,16 +518,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomzouyuxinsusierssdiagnostictree72f797c03ddf5a854f764b9f81dcd4a48254dca5targetblank72f797ca"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/zouyuxin/susierss_diagnostic/tree/72f797c03ddf5a854f764b9f81dcd4a48254dca5" target="_blank">72f797c</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomzouyuxinsusierssdiagnostictree54991804d2d664b67c04db12b62fe4f429788b99targetblank5499180a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/zouyuxin/susierss_diagnostic/tree/54991804d2d664b67c04db12b62fe4f429788b99" target="_blank">5499180</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomzouyuxinsusierssdiagnostictree72f797c03ddf5a854f764b9f81dcd4a48254dca5targetblank72f797ca" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomzouyuxinsusierssdiagnostictree54991804d2d664b67c04db12b62fe4f429788b99targetblank5499180a" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/zouyuxin/susierss_diagnostic/tree/72f797c03ddf5a854f764b9f81dcd4a48254dca5" target="_blank">72f797c</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/zouyuxin/susierss_diagnostic/tree/54991804d2d664b67c04db12b62fe4f429788b99" target="_blank">5499180</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -537,9 +537,6 @@ Ignored files:
     Ignored:    .Rhistory
     Ignored:    .Rproj.user/
     Ignored:    output/.DS_Store
-
-Untracked files:
-    Untracked:  data/susierss_diagnostic_query.rds
 
 </code></pre>
 <p>
@@ -583,6 +580,40 @@ Message
 Rmd
 </td>
 <td>
+<a href="https://github.com/zouyuxin/susierss_diagnostic/blob/54991804d2d664b67c04db12b62fe4f429788b99/analysis/diagnostic_lr.Rmd" target="_blank">5499180</a>
+</td>
+<td>
+zouyuxin
+</td>
+<td>
+2021-02-10
+</td>
+<td>
+wflow_publish(“analysis/diagnostic_lr.Rmd”)
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/zouyuxin/susierss_diagnostic/26f87300a7b99b89124cb6b5a59a9f82553e1705/docs/diagnostic_lr.html" target="_blank">26f8730</a>
+</td>
+<td>
+zouyuxin
+</td>
+<td>
+2021-02-09
+</td>
+<td>
+Build site.
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
 <a href="https://github.com/zouyuxin/susierss_diagnostic/blob/72f797c03ddf5a854f764b9f81dcd4a48254dca5/analysis/diagnostic_lr.Rmd" target="_blank">72f797c</a>
 </td>
 <td>
@@ -604,8 +635,8 @@ wflow_publish(“analysis/diagnostic_lr.Rmd”)
 </div>
 <p>There are two goals in diagnostic:</p>
 <ol style="list-style-type: decimal">
-<li><p>Check the consistency between z scores and LD matrix;</p></li>
-<li><p>Detect allele switch issue (flipped sign in z score).</p></li>
+<li><p>Check the consistency between z scores and LD matrix using <span class="math inline">\(s^2\)</span>;</p></li>
+<li><p>Detect allele switch issue (flipped sign in z score) using conditional distribution.</p></li>
 </ol>
 <p>In diagnostic, we assume the following model, <span class="math display">\[
 \hat{z} \sim N(Rz, \sigma^2 R + s^2 I), \sigma^2 + s^2 \leq 1.
@@ -621,7 +652,7 @@ LR = \frac{p(-\hat{z}_j | \hat{z}_{-j})}{p(\hat{z}_j | \hat{z}_{-j})}
 <p><strong>Simulation Setting</strong></p>
 <p>In the following simulation, we extract 200 regions from 1000 Genome data using GBR (British in England and Scotland), IBS (Iberian Populations in Spain) and CLM (Colombians in Medellin, Colombia) population. We got 1000 Genome genotypes from <a href="ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/supporting/hd_genotype_chip" class="uri">ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/supporting/hd_genotype_chip</a>, ALL.chip.omni_broad_sanger_combined.20140818.snps.genotypes.vcf.gz. The VCF file is converted to bed format using plink. We removed related samples. There are 103 GBR samples, 150 IBS samples and 107 CLM samples. We generated z scores based on GBR samples and we want to detect the inconsistency between z scores and LD (from GBR, IBS or CLM).</p>
 <p><strong>Summary</strong></p>
-<p>In summary, a large <span class="math inline">\(s^2\)</span> indicates that the z scores and LD matrix are mismatched. One mismatch is that the LD matrix is from the reference panel, or another population. The <span class="math inline">\(s^2\)</span> using LD from CLM is larger than the one using LD from IBS. The other mismatch is that some SNPs have flipped z scores. The flipped z score has large log likelihood ratio.</p>
+<p>In summary, a large <span class="math inline">\(s^2\)</span> indicates that the z scores and LD matrix are mismatched. One mismatch is that the LD matrix is from the reference panel, or another population. The <span class="math inline">\(s^2\)</span> using LD from CLM is larger than the one using LD from IBS. The other mismatch is that some SNPs have flipped z scores. The flipped z score has larger log likelihood ratio. In Simulation 1.1 (null and no flip), there are SNPs with large log likelihood ratio when the LD matrix is from IBS or CLM. This may be due to the inaccuracy in LD matrix, the conditional distribution depends on the LD matrix.</p>
 <pre class="r"><code>library(tibble)
 library(dplyr)
 out = readRDS(&#39;data/susierss_diagnostic_query.rds&#39;)
@@ -662,6 +693,43 @@ abline(0,1)
 plot(out_null_IBS_s2, out_null_CLM_s2, xlab = &#39;LD = IBS&#39;, ylab=&#39;LD = CLM&#39;, main=&#39;GBR z scores&#39;)
 abline(0,1)</code></pre>
 <p><img src="figure/diagnostic_lr.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-5-1">
+Past versions of unnamed-chunk-5-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-5-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/zouyuxin/susierss_diagnostic/blob/26f87300a7b99b89124cb6b5a59a9f82553e1705/docs/figure/diagnostic_lr.Rmd/unnamed-chunk-5-1.png" target="_blank">26f8730</a>
+</td>
+<td>
+zouyuxin
+</td>
+<td>
+2021-02-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>The estimated <span class="math inline">\(s^2\)</span> is larger when the LD matrix is from another sample.</p>
 </div>
 <div id="check-conditional-mean-and-likelihood" class="section level3">
@@ -700,6 +768,43 @@ hist(out_null_sample_z, xlab=&#39;LD=GBR&#39;, main=&#39;Standardized Difference
 hist(out_null_IBS_z, xlab=&#39;LD=IBS&#39;, main=&#39;Standardized Difference&#39;, breaks = 50, freq = FALSE)
 hist(out_null_CLM_z, xlab=&#39;LD=CLM&#39;, main=&#39;Standardized Difference&#39;, breaks = 50, freq = FALSE)</code></pre>
 <p><img src="figure/diagnostic_lr.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-7-1">
+Past versions of unnamed-chunk-7-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-7-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/zouyuxin/susierss_diagnostic/blob/26f87300a7b99b89124cb6b5a59a9f82553e1705/docs/figure/diagnostic_lr.Rmd/unnamed-chunk-7-1.png" target="_blank">26f8730</a>
+</td>
+<td>
+zouyuxin
+</td>
+<td>
+2021-02-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>par(mfrow=c(1,3))
 plot(out_null_sample_l0, out_null_sample_l1, main=&#39;LD=GBR&#39;, xlab=&#39;log likelihood under null&#39;, ylab=&#39;log likelihood under alternative&#39;)
 abline(0,1)
@@ -708,6 +813,43 @@ abline(0,1)
 plot(out_null_CLM_l0, out_null_CLM_l1, main=&#39;LD=CLM&#39;, xlab=&#39;log likelihood under null&#39;, ylab=&#39;log likelihood under alternative&#39;)
 abline(0,1)</code></pre>
 <p><img src="figure/diagnostic_lr.Rmd/unnamed-chunk-7-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-7-2">
+Past versions of unnamed-chunk-7-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-7-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/zouyuxin/susierss_diagnostic/blob/26f87300a7b99b89124cb6b5a59a9f82553e1705/docs/figure/diagnostic_lr.Rmd/unnamed-chunk-7-2.png" target="_blank">26f8730</a>
+</td>
+<td>
+zouyuxin
+</td>
+<td>
+2021-02-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 </div>
 <div id="simulation-1.2-under-null-with-one-flipped-sign" class="section level2">
@@ -730,10 +872,84 @@ abline(0,1)
 plot(out_null_flip_IBS_s2, out_null_flip_CLM_s2, xlab = &#39;LD = IBS&#39;, ylab=&#39;LD = CLM&#39;, main=&#39;GBR z scores&#39;)
 abline(0,1)</code></pre>
 <p><img src="figure/diagnostic_lr.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-9-1">
+Past versions of unnamed-chunk-9-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-9-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/zouyuxin/susierss_diagnostic/blob/26f87300a7b99b89124cb6b5a59a9f82553e1705/docs/figure/diagnostic_lr.Rmd/unnamed-chunk-9-1.png" target="_blank">26f8730</a>
+</td>
+<td>
+zouyuxin
+</td>
+<td>
+2021-02-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Comparing the estimated <span class="math inline">\(s^2\)</span> with non-flipped sign (Simulation 1.1):</p>
 <pre class="r"><code>plot(out_null_sample_s2, out_null_flip_sample_s2, xlab=&#39;non-flip&#39;, ylab=&#39;flip&#39;, main=&#39;GBR s2&#39;)
 abline(0,1)</code></pre>
 <p><img src="figure/diagnostic_lr.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-10-1">
+Past versions of unnamed-chunk-10-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-10-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/zouyuxin/susierss_diagnostic/blob/26f87300a7b99b89124cb6b5a59a9f82553e1705/docs/figure/diagnostic_lr.Rmd/unnamed-chunk-10-1.png" target="_blank">26f8730</a>
+</td>
+<td>
+zouyuxin
+</td>
+<td>
+2021-02-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 <div id="check-conditional-mean-and-likelihood-1" class="section level3">
 <h3>Check conditional mean and Likelihood</h3>
@@ -779,6 +995,43 @@ hist(out_null_flip_sample_z, xlab=&#39;LD=GBR&#39;, main=&#39;Standardized Diffe
 hist(out_null_flip_IBS_z, xlab=&#39;LD=IBS&#39;, main=&#39;Standardized Difference&#39;, breaks = 50, freq = FALSE)
 hist(out_null_flip_CLM_z, xlab=&#39;LD=CLM&#39;, main=&#39;Standardized Difference&#39;, breaks = 50, freq = FALSE)</code></pre>
 <p><img src="figure/diagnostic_lr.Rmd/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-12-1">
+Past versions of unnamed-chunk-12-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-12-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/zouyuxin/susierss_diagnostic/blob/26f87300a7b99b89124cb6b5a59a9f82553e1705/docs/figure/diagnostic_lr.Rmd/unnamed-chunk-12-1.png" target="_blank">26f8730</a>
+</td>
+<td>
+zouyuxin
+</td>
+<td>
+2021-02-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>par(mfrow=c(1,3))
 plot(out_null_flip_sample_l0, out_null_flip_sample_l1, main=&#39;LD=GBR&#39;, xlab=&#39;log likelihood under null&#39;, ylab=&#39;log likelihood under alternative&#39;)
 points(out_null_flip_sample_l0[idx], out_null_flip_sample_l1[idx], col=&#39;red&#39;, pch=16)
@@ -790,6 +1043,43 @@ plot(out_null_flip_CLM_l0, out_null_flip_CLM_l1, main=&#39;LD=CLM&#39;, xlab=&#3
 points(out_null_flip_CLM_l0[idx], out_null_flip_CLM_l1[idx], col=&#39;red&#39;, pch=16)
 abline(0,1)</code></pre>
 <p><img src="figure/diagnostic_lr.Rmd/unnamed-chunk-12-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-12-2">
+Past versions of unnamed-chunk-12-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-12-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/zouyuxin/susierss_diagnostic/blob/26f87300a7b99b89124cb6b5a59a9f82553e1705/docs/figure/diagnostic_lr.Rmd/unnamed-chunk-12-2.png" target="_blank">26f8730</a>
+</td>
+<td>
+zouyuxin
+</td>
+<td>
+2021-02-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Comparing standardized difference from Simulation 1.1 and 1.2,</p>
 <pre class="r"><code>par(mfrow=c(1,3))
 plot(out_null_sample_z, out_null_flip_sample_z, 
@@ -808,6 +1098,43 @@ plot(out_null_CLM_z, out_null_flip_CLM_z,
 points(out_null_CLM_z[idx], out_null_flip_CLM_z[idx], col=&#39;red&#39;, pch=16)
 abline(0,1)</code></pre>
 <p><img src="figure/diagnostic_lr.Rmd/unnamed-chunk-13-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-13-1">
+Past versions of unnamed-chunk-13-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-13-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/zouyuxin/susierss_diagnostic/blob/26f87300a7b99b89124cb6b5a59a9f82553e1705/docs/figure/diagnostic_lr.Rmd/unnamed-chunk-13-1.png" target="_blank">26f8730</a>
+</td>
+<td>
+zouyuxin
+</td>
+<td>
+2021-02-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Comparing LR from Simulation 1.1 and 1.2,</p>
 <pre class="r"><code>par(mfrow=c(1,3))
 plot(out_null_sample_lr, out_null_flip_sample_lr, ylim=c(-3000,500),
@@ -826,6 +1153,43 @@ plot(out_null_CLM_lr, out_null_flip_CLM_lr,
 points(out_null_CLM_lr[idx], out_null_flip_CLM_lr[idx], col=&#39;red&#39;, pch=16)
 abline(0,1)</code></pre>
 <p><img src="figure/diagnostic_lr.Rmd/unnamed-chunk-14-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-14-1">
+Past versions of unnamed-chunk-14-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-14-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/zouyuxin/susierss_diagnostic/blob/26f87300a7b99b89124cb6b5a59a9f82553e1705/docs/figure/diagnostic_lr.Rmd/unnamed-chunk-14-1.png" target="_blank">26f8730</a>
+</td>
+<td>
+zouyuxin
+</td>
+<td>
+2021-02-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 </div>
 <div id="simulation-2.1-one-signal" class="section level2">
@@ -848,6 +1212,43 @@ abline(0,1)
 plot(out_IBS_s2, out_CLM_s2, xlab = &#39;LD = IBS&#39;, ylab=&#39;LD = CLM&#39;, main=&#39;GBR z scores&#39;)
 abline(0,1)</code></pre>
 <p><img src="figure/diagnostic_lr.Rmd/unnamed-chunk-16-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-16-1">
+Past versions of unnamed-chunk-16-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-16-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/zouyuxin/susierss_diagnostic/blob/26f87300a7b99b89124cb6b5a59a9f82553e1705/docs/figure/diagnostic_lr.Rmd/unnamed-chunk-16-1.png" target="_blank">26f8730</a>
+</td>
+<td>
+zouyuxin
+</td>
+<td>
+2021-02-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 <div id="check-conditional-mean-and-likelihood-2" class="section level3">
 <h3>Check conditional mean and Likelihood</h3>
@@ -885,6 +1286,43 @@ hist(out_sample_z, xlab=&#39;LD=GBR&#39;, main=&#39;Standardized Difference&#39;
 hist(out_IBS_z, xlab=&#39;LD=IBS&#39;, main=&#39;Standardized Difference&#39;, breaks = 50, freq = FALSE)
 hist(out_CLM_z, xlab=&#39;LD=CLM&#39;, main=&#39;Standardized Difference&#39;, breaks = 50, freq = FALSE)</code></pre>
 <p><img src="figure/diagnostic_lr.Rmd/unnamed-chunk-18-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-18-1">
+Past versions of unnamed-chunk-18-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-18-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/zouyuxin/susierss_diagnostic/blob/26f87300a7b99b89124cb6b5a59a9f82553e1705/docs/figure/diagnostic_lr.Rmd/unnamed-chunk-18-1.png" target="_blank">26f8730</a>
+</td>
+<td>
+zouyuxin
+</td>
+<td>
+2021-02-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>par(mfrow=c(1,3))
 plot(out_sample_l0, out_sample_l1, main=&#39;LD=GBR&#39;, xlab=&#39;log likelihood under null&#39;, ylab=&#39;log likelihood under alternative&#39;)
 abline(0,1)
@@ -893,6 +1331,43 @@ abline(0,1)
 plot(out_CLM_l0, out_CLM_l1, main=&#39;LD=CLM&#39;, xlab=&#39;log likelihood under null&#39;, ylab=&#39;log likelihood under alternative&#39;)
 abline(0,1)</code></pre>
 <p><img src="figure/diagnostic_lr.Rmd/unnamed-chunk-18-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-18-2">
+Past versions of unnamed-chunk-18-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-18-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/zouyuxin/susierss_diagnostic/blob/26f87300a7b99b89124cb6b5a59a9f82553e1705/docs/figure/diagnostic_lr.Rmd/unnamed-chunk-18-2.png" target="_blank">26f8730</a>
+</td>
+<td>
+zouyuxin
+</td>
+<td>
+2021-02-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 </div>
 <div id="simulation-2.2-flipped-sign-at-signal" class="section level2">
@@ -915,6 +1390,43 @@ abline(0,1)
 plot(out_flip_IBS_s2, out_flip_CLM_s2, xlab = &#39;LD = IBS&#39;, ylab=&#39;LD = CLM&#39;, main=&#39;GBR z scores&#39;)
 abline(0,1)</code></pre>
 <p><img src="figure/diagnostic_lr.Rmd/unnamed-chunk-20-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-20-1">
+Past versions of unnamed-chunk-20-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-20-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/zouyuxin/susierss_diagnostic/blob/26f87300a7b99b89124cb6b5a59a9f82553e1705/docs/figure/diagnostic_lr.Rmd/unnamed-chunk-20-1.png" target="_blank">26f8730</a>
+</td>
+<td>
+zouyuxin
+</td>
+<td>
+2021-02-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 <div id="check-conditional-mean-and-likelihood-3" class="section level3">
 <h3>Check conditional mean and Likelihood</h3>
@@ -959,6 +1471,43 @@ hist(out_flip_sample_z, xlab=&#39;LD=GBR&#39;, main=&#39;Standardized Difference
 hist(out_flip_IBS_z, xlab=&#39;LD=IBS&#39;, main=&#39;Standardized Difference&#39;, breaks = 50, freq = FALSE)
 hist(out_flip_CLM_z, xlab=&#39;LD=CLM&#39;, main=&#39;Standardized Difference&#39;, breaks = 50, freq = FALSE)</code></pre>
 <p><img src="figure/diagnostic_lr.Rmd/unnamed-chunk-22-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-22-1">
+Past versions of unnamed-chunk-22-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-22-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/zouyuxin/susierss_diagnostic/blob/26f87300a7b99b89124cb6b5a59a9f82553e1705/docs/figure/diagnostic_lr.Rmd/unnamed-chunk-22-1.png" target="_blank">26f8730</a>
+</td>
+<td>
+zouyuxin
+</td>
+<td>
+2021-02-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>par(mfrow=c(1,3))
 plot(out_flip_sample_l0, out_flip_sample_l1, main=&#39;LD=GBR&#39;, xlab=&#39;log likelihood under null&#39;, ylab=&#39;log likelihood under alternative&#39;)
 points(out_flip_sample_l0[idx], out_flip_sample_l1[idx], col=&#39;red&#39;, pch=16)
@@ -970,6 +1519,43 @@ plot(out_flip_CLM_l0, out_flip_CLM_l1, main=&#39;LD=CLM&#39;, xlab=&#39;log like
 points(out_flip_CLM_l0[idx], out_flip_CLM_l1[idx], col=&#39;red&#39;, pch=16)
 abline(0,1)</code></pre>
 <p><img src="figure/diagnostic_lr.Rmd/unnamed-chunk-22-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-22-2">
+Past versions of unnamed-chunk-22-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-22-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/zouyuxin/susierss_diagnostic/blob/26f87300a7b99b89124cb6b5a59a9f82553e1705/docs/figure/diagnostic_lr.Rmd/unnamed-chunk-22-2.png" target="_blank">26f8730</a>
+</td>
+<td>
+zouyuxin
+</td>
+<td>
+2021-02-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Comparing standardized difference from Simulation 2.1 and 2.2,</p>
 <pre class="r"><code>par(mfrow=c(1,3))
 plot(out_sample_z, out_flip_sample_z, 
@@ -988,6 +1574,43 @@ plot(out_CLM_z, out_flip_CLM_z,
 points(out_CLM_z[idx], out_flip_CLM_z[idx], col=&#39;red&#39;, pch=16)
 abline(0,1)</code></pre>
 <p><img src="figure/diagnostic_lr.Rmd/unnamed-chunk-23-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-23-1">
+Past versions of unnamed-chunk-23-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-23-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/zouyuxin/susierss_diagnostic/blob/26f87300a7b99b89124cb6b5a59a9f82553e1705/docs/figure/diagnostic_lr.Rmd/unnamed-chunk-23-1.png" target="_blank">26f8730</a>
+</td>
+<td>
+zouyuxin
+</td>
+<td>
+2021-02-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Comparing LR from Simulation 2.1 and 2.2,</p>
 <pre class="r"><code>par(mfrow=c(1,3))
 plot(out_sample_lr, out_flip_sample_lr, ylim=c(-3000,500),
@@ -1006,10 +1629,48 @@ plot(out_CLM_lr, out_flip_CLM_lr,
 points(out_CLM_lr[idx], out_flip_CLM_lr[idx], col=&#39;red&#39;, pch=16)
 abline(0,1)</code></pre>
 <p><img src="figure/diagnostic_lr.Rmd/unnamed-chunk-24-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-24-1">
+Past versions of unnamed-chunk-24-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-24-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/zouyuxin/susierss_diagnostic/blob/26f87300a7b99b89124cb6b5a59a9f82553e1705/docs/figure/diagnostic_lr.Rmd/unnamed-chunk-24-1.png" target="_blank">26f8730</a>
+</td>
+<td>
+zouyuxin
+</td>
+<td>
+2021-02-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 </div>
 <div id="simulation-2.3-flipped-sign-at-null" class="section level2">
 <h2>Simulation 2.3: flipped sign at null</h2>
+<p>Based on Simulation 2.1, we randomly flipped sign of one non-signal z score.</p>
 <pre class="r"><code>out_flip_null_sample = out_signal_flip_null %&gt;% filter(susie_rss.ld_type == &#39;sample&#39;, susie_rss.correct_ld == FALSE)
 out_flip_null_IBS = out_signal_flip_null %&gt;% filter(susie_rss.ld_type == &#39;IBS&#39;, susie_rss.correct_ld == FALSE)
 out_flip_null_CLM = out_signal_flip_null %&gt;% filter(susie_rss.ld_type == &#39;CLM&#39;, susie_rss.correct_ld == FALSE)</code></pre>
@@ -1027,6 +1688,43 @@ abline(0,1)
 plot(out_flip_null_IBS_s2, out_flip_null_CLM_s2, xlab = &#39;LD = IBS&#39;, ylab=&#39;LD = CLM&#39;, main=&#39;GBR z scores&#39;)
 abline(0,1)</code></pre>
 <p><img src="figure/diagnostic_lr.Rmd/unnamed-chunk-26-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-26-1">
+Past versions of unnamed-chunk-26-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-26-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/zouyuxin/susierss_diagnostic/blob/26f87300a7b99b89124cb6b5a59a9f82553e1705/docs/figure/diagnostic_lr.Rmd/unnamed-chunk-26-1.png" target="_blank">26f8730</a>
+</td>
+<td>
+zouyuxin
+</td>
+<td>
+2021-02-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 <div id="check-conditional-mean-and-likelihood-4" class="section level3">
 <h3>Check conditional mean and Likelihood</h3>
@@ -1071,6 +1769,43 @@ hist(out_flip_null_sample_z, xlab=&#39;LD=GBR&#39;, main=&#39;Standardized Diffe
 hist(out_flip_null_IBS_z, xlab=&#39;LD=IBS&#39;, main=&#39;Standardized Difference&#39;, breaks = 50, freq = FALSE)
 hist(out_flip_null_CLM_z, xlab=&#39;LD=CLM&#39;, main=&#39;Standardized Difference&#39;, breaks = 50, freq = FALSE)</code></pre>
 <p><img src="figure/diagnostic_lr.Rmd/unnamed-chunk-28-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-28-1">
+Past versions of unnamed-chunk-28-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-28-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/zouyuxin/susierss_diagnostic/blob/26f87300a7b99b89124cb6b5a59a9f82553e1705/docs/figure/diagnostic_lr.Rmd/unnamed-chunk-28-1.png" target="_blank">26f8730</a>
+</td>
+<td>
+zouyuxin
+</td>
+<td>
+2021-02-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>par(mfrow=c(1,3))
 plot(out_flip_null_sample_l0, out_flip_null_sample_l1, main=&#39;LD=GBR&#39;, xlab=&#39;log likelihood under null&#39;, ylab=&#39;log likelihood under alternative&#39;)
 points(out_flip_null_sample_l0[idx], out_flip_null_sample_l1[idx], col=&#39;red&#39;, pch=16)
@@ -1082,6 +1817,43 @@ plot(out_flip_null_CLM_l0, out_flip_null_CLM_l1, main=&#39;LD=CLM&#39;, xlab=&#3
 points(out_flip_null_CLM_l0[idx], out_flip_null_CLM_l1[idx], col=&#39;red&#39;, pch=16)
 abline(0,1)</code></pre>
 <p><img src="figure/diagnostic_lr.Rmd/unnamed-chunk-28-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-28-2">
+Past versions of unnamed-chunk-28-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-28-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/zouyuxin/susierss_diagnostic/blob/26f87300a7b99b89124cb6b5a59a9f82553e1705/docs/figure/diagnostic_lr.Rmd/unnamed-chunk-28-2.png" target="_blank">26f8730</a>
+</td>
+<td>
+zouyuxin
+</td>
+<td>
+2021-02-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Comparing standardized difference from Simulation 2.1 and 2.3,</p>
 <pre class="r"><code>par(mfrow=c(1,3))
 plot(out_sample_z, out_flip_null_sample_z, 
@@ -1100,6 +1872,43 @@ plot(out_CLM_z, out_flip_null_CLM_z,
 points(out_CLM_z[idx], out_flip_null_CLM_z[idx], col=&#39;red&#39;, pch=16)
 abline(0,1)</code></pre>
 <p><img src="figure/diagnostic_lr.Rmd/unnamed-chunk-29-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-29-1">
+Past versions of unnamed-chunk-29-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-29-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/zouyuxin/susierss_diagnostic/blob/26f87300a7b99b89124cb6b5a59a9f82553e1705/docs/figure/diagnostic_lr.Rmd/unnamed-chunk-29-1.png" target="_blank">26f8730</a>
+</td>
+<td>
+zouyuxin
+</td>
+<td>
+2021-02-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Comparing LR from Simulation 2.1 and 2.3,</p>
 <pre class="r"><code>par(mfrow=c(1,3))
 plot(out_sample_lr, out_flip_null_sample_lr, ylim=c(-3000,500),
@@ -1118,6 +1927,43 @@ plot(out_CLM_lr, out_flip_null_CLM_lr,
 points(out_CLM_lr[idx], out_flip_null_CLM_lr[idx], col=&#39;red&#39;, pch=16)
 abline(0,1)</code></pre>
 <p><img src="figure/diagnostic_lr.Rmd/unnamed-chunk-30-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-30-1">
+Past versions of unnamed-chunk-30-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-30-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/zouyuxin/susierss_diagnostic/blob/26f87300a7b99b89124cb6b5a59a9f82553e1705/docs/figure/diagnostic_lr.Rmd/unnamed-chunk-30-1.png" target="_blank">26f8730</a>
+</td>
+<td>
+zouyuxin
+</td>
+<td>
+2021-02-09
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
