@@ -1,0 +1,602 @@
+---
+title: "SuSiE RSS Diagnostic"
+author: "Yuxin Zou"
+date: "2/9/2021"
+output: 
+  workflowr::wflow_html:
+    code_folding: hide
+---
+
+There are two goals in diagnostic:
+
+1. Check the consistency between z scores and LD matrix;
+
+2. Detect allele switch issue (flipped sign in z score).
+
+In diagnostic, we assume the following model,
+$$
+\hat{z} \sim N(Rz, \sigma^2 R + s^2 I), \sigma^2 + s^2 \leq 1.
+$$
+Let $R = U D U^\intercal$ be eigen-decomposition of $R$, $D$ has $p_1$ positive diagonal elements, $U = [U_1 \ U_2]$, $U_1$ is a $p$ by $p_1$ matrix, $U_2$ is a $p$ by $p_2=p-p_1$ matrix. We transform $\hat{z}$ into null space of $R$ by multiplying $U_2^\intercal$
+$$
+U_2^T \hat{z} \sim N(0, s^2 I_{p_2}).
+$$
+Therefore, the MLE for $s^2$ using partial data is $\frac{1}{p_2} \hat{z}^\intercal U_2 U_2^\intercal \hat{z}$. We estimate $\sigma^2$ by $1-s^2$.
+
+Under the null, the posterior distribution of $\hat{z}_j | \hat{z}_{-j}$ is:
+$$
+\hat{z}_j | \hat{z}_{-j} \sim N(-\frac{1}{\Omega_{jj}} \Omega_{j,-j} \hat{z}_{-j},1/\Omega_{jj}), \Omega = (\sigma^2 R + s^2 I)^{-1}.
+$$
+
+To check whether there is an allele switch issue, we test the hypothesis $H_0:$ the sign of $\hat{z}_j$ is correct, vs $H_1:$ the sign of $\hat{z}_j$ is flipped. The likelihood ratio is
+$$
+LR = \frac{p(-\hat{z}_j | \hat{z}_{-j})}{p(\hat{z}_j | \hat{z}_{-j})}
+$$
+
+**Simulation Setting**
+
+In the following simulation, we extract 200 regions from 1000 Genome data using GBR (British in England and Scotland), IBS (Iberian Populations in Spain) and CLM (Colombians in Medellin, Colombia) population. We got 1000 Genome genotypes from ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/supporting/hd_genotype_chip, ALL.chip.omni_broad_sanger_combined.20140818.snps.genotypes.vcf.gz. The VCF file is converted to bed format using plink. We removed related samples. There are 103 GBR samples, 150 IBS samples and 107 CLM samples. We generated z scores based on GBR samples and we want to detect the inconsistency between z scores and LD (from GBR, IBS or CLM). 
+
+**Summary**
+
+In summary, a large $s^2$ indicates that the z scores and LD matrix are mismatched. One mismatch is that the LD matrix is from the reference panel, or another population. The $s^2$ using LD from CLM is larger than the one using LD from IBS. The other mismatch is that some SNPs have flipped z scores. The flipped z score has large log likelihood ratio. 
+
+```{r message=FALSE}
+library(tibble)
+library(dplyr)
+out = readRDS('data/susierss_diagnostic_query.rds')
+out = as_tibble(out)
+out_null = out %>% filter(simulate.n_signal == 0, flip_z.flip == FALSE)
+out_signal = out %>% filter(simulate.n_signal == 1, flip_z.flip == FALSE)
+out_null_flip = out %>% filter(simulate.n_signal == 0, 
+                               flip_z.flip == TRUE, 
+                               flip_z.flip_pos == 'null')
+out_signal_flip_null = out %>% filter(simulate.n_signal == 1, 
+                               flip_z.flip == TRUE, 
+                               flip_z.flip_pos == 'null')
+out_signal_flip_signal = out %>% filter(simulate.n_signal == 1, 
+                               flip_z.flip == TRUE, 
+                               flip_z.flip_pos == 'signal')
+```
+
+```{r}
+out_null_sample = out_null %>% filter(susie_rss.ld_type == 'sample', susie_rss.correct_ld == FALSE)
+```
+
+Here is a summary of number of SNPs in each region:
+```{r}
+summary(sapply(out_null_sample$diagnostic.res1_simple, function(x) nrow(x$post)))
+```
+
+## Simulation 1.1: under null (z = 0)
+
+```{r}
+out_null_sample = out_null %>% filter(susie_rss.ld_type == 'sample', susie_rss.correct_ld == FALSE)
+out_null_IBS = out_null %>% filter(susie_rss.ld_type == 'IBS', susie_rss.correct_ld == FALSE)
+out_null_CLM = out_null %>% filter(susie_rss.ld_type == 'CLM', susie_rss.correct_ld == FALSE)
+```
+
+### Check $s^2$
+
+We compare the $s^2$ using different LD matrix. The z scores are calculated using GBR samples.
+
+```{r}
+par(mfrow=c(1,3))
+out_null_sample_s2 = apply(out_null_sample, 1, function(x) x$diagnostic.res1_simple$s2)
+out_null_IBS_s2 = apply(out_null_IBS, 1, function(x) x$diagnostic.res1_simple$s2)
+out_null_CLM_s2 = apply(out_null_CLM, 1, function(x) x$diagnostic.res1_simple$s2)
+
+plot(out_null_sample_s2, out_null_IBS_s2, xlab = 'LD = GBR', ylab='LD = IBS', main='GBR z scores')
+abline(0,1)
+plot(out_null_sample_s2, out_null_CLM_s2, xlab = 'LD = GBR', ylab='LD = CLM', main='GBR z scores')
+abline(0,1)
+plot(out_null_IBS_s2, out_null_CLM_s2, xlab = 'LD = IBS', ylab='LD = CLM', main='GBR z scores')
+abline(0,1)
+```
+
+The estimated $s^2$ is larger when the LD matrix is from another sample. 
+
+### Check conditional mean and Likelihood
+
+```{r}
+z = unlist(lapply(out_null_sample$diagnostic.res1_simple, function(x) x$post$z))
+out_null_sample_mean = unlist(lapply(out_null_sample$diagnostic.res1_simple, function(x) x$post$postmean))
+out_null_sample_z = unlist(lapply(out_null_sample$diagnostic.res1_simple, function(x) x$post$post_z))
+out_null_sample_l0 = unlist(lapply(out_null_sample$diagnostic.res1_simple, function(x) x$post$logl0))
+out_null_sample_l1 = unlist(lapply(out_null_sample$diagnostic.res1_simple, function(x) x$post$logl1))
+out_null_sample_lr = unlist(lapply(out_null_sample$diagnostic.res1_simple, function(x) x$post$logLR))
+
+out_null_IBS_mean = unlist(lapply(out_null_IBS$diagnostic.res1_simple, function(x) x$post$postmean))
+out_null_IBS_z = unlist(lapply(out_null_IBS$diagnostic.res1_simple, function(x) x$post$post_z))
+out_null_IBS_l0 = unlist(lapply(out_null_IBS$diagnostic.res1_simple, function(x) x$post$logl0))
+out_null_IBS_l1 = unlist(lapply(out_null_IBS$diagnostic.res1_simple, function(x) x$post$logl1))
+out_null_IBS_lr = unlist(lapply(out_null_IBS$diagnostic.res1_simple, function(x) x$post$logLR))
+
+out_null_CLM_mean = unlist(lapply(out_null_CLM$diagnostic.res1_simple, function(x) x$post$postmean))
+out_null_CLM_z = unlist(lapply(out_null_CLM$diagnostic.res1_simple, function(x) x$post$post_z))
+out_null_CLM_l0 = unlist(lapply(out_null_CLM$diagnostic.res1_simple, function(x) x$post$logl0))
+out_null_CLM_l1 = unlist(lapply(out_null_CLM$diagnostic.res1_simple, function(x) x$post$logl1))
+out_null_CLM_lr = unlist(lapply(out_null_CLM$diagnostic.res1_simple, function(x) x$post$logLR))
+```
+
+```{r}
+par(mfrow=c(3,3))
+diff_sample = z-out_null_sample_mean; diff_IBS = z-out_null_IBS_mean; diff_CLM = z-out_null_CLM_mean; 
+ymax = ceiling(max(c(diff_sample, diff_IBS, diff_CLM))); ymin = floor(min(c(diff_sample, diff_IBS, diff_CLM)))
+plot(diff_sample, ylab='LD=GBR', main='z-conditional mean',cex=0.6, ylim = c(ymin, ymax))
+plot(diff_IBS, ylab='LD=IBS', ylim = c(ymin, ymax))
+plot(diff_CLM, ylab='LD=CLM', ylim = c(ymin, ymax))
+
+ymax = ceiling(max(c(out_null_sample_z, out_null_IBS_z, out_null_CLM_z))); ymin = floor(min(c(out_null_sample_z, out_null_IBS_z, out_null_CLM_z)))
+plot(out_null_sample_z, ylab='LD=GBR', main='standardized difference',cex=0.6, ylim = c(ymin, ymax))
+plot(out_null_IBS_z, ylab='LD=IBS', ylim = c(ymin, ymax))
+plot(out_null_CLM_z, ylab='LD=CLM', ylim = c(ymin, ymax))
+
+hist(out_null_sample_z, xlab='LD=GBR', main='Standardized Difference', breaks = 50, freq = FALSE)
+hist(out_null_IBS_z, xlab='LD=IBS', main='Standardized Difference', breaks = 50, freq = FALSE)
+hist(out_null_CLM_z, xlab='LD=CLM', main='Standardized Difference', breaks = 50, freq = FALSE)
+
+par(mfrow=c(1,3))
+plot(out_null_sample_l0, out_null_sample_l1, main='LD=GBR', xlab='log likelihood under null', ylab='log likelihood under alternative')
+abline(0,1)
+plot(out_null_IBS_l0, out_null_IBS_l1, main='LD=IBS', xlab='log likelihood under null', ylab='log likelihood under alternative')
+abline(0,1)
+plot(out_null_CLM_l0, out_null_CLM_l1, main='LD=CLM', xlab='log likelihood under null', ylab='log likelihood under alternative')
+abline(0,1)
+```
+
+## Simulation 1.2: under null with one flipped sign
+
+Based on Simulation 1.1, we randomly flipped sign of one z score.
+
+```{r}
+out_null_flip_sample = out_null_flip %>% filter(susie_rss.ld_type == 'sample', susie_rss.correct_ld == FALSE)
+out_null_flip_IBS = out_null_flip %>% filter(susie_rss.ld_type == 'IBS', susie_rss.correct_ld == FALSE)
+out_null_flip_CLM = out_null_flip %>% filter(susie_rss.ld_type == 'CLM', susie_rss.correct_ld == FALSE)
+```
+
+### Check $s^2$
+
+```{r}
+par(mfrow=c(1,3))
+out_null_flip_sample_s2 = apply(out_null_flip_sample, 1, function(x) x$diagnostic.res1_simple$s2)
+out_null_flip_IBS_s2 = apply(out_null_flip_IBS, 1, function(x) x$diagnostic.res1_simple$s2)
+out_null_flip_CLM_s2 = apply(out_null_flip_CLM, 1, function(x) x$diagnostic.res1_simple$s2)
+
+plot(out_null_flip_sample_s2, out_null_flip_IBS_s2, xlab = 'LD = GBR', ylab='LD = IBS', main='GBR z scores')
+abline(0,1)
+plot(out_null_flip_sample_s2, out_null_flip_CLM_s2, xlab = 'LD = GBR', ylab='LD = CLM', main='GBR z scores')
+abline(0,1)
+plot(out_null_flip_IBS_s2, out_null_flip_CLM_s2, xlab = 'LD = IBS', ylab='LD = CLM', main='GBR z scores')
+abline(0,1)
+```
+
+Comparing the estimated $s^2$ with non-flipped sign (Simulation 1.1):
+```{r}
+plot(out_null_sample_s2, out_null_flip_sample_s2, xlab='non-flip', ylab='flip', main='GBR s2')
+abline(0,1)
+```
+
+### Check conditional mean and Likelihood
+
+```{r}
+z_flip = unlist(lapply(out_null_flip_sample$diagnostic.res1_simple, function(x) x$post$z))
+out_null_flip_sample_mean = unlist(lapply(out_null_flip_sample$diagnostic.res1_simple, function(x) x$post$postmean))
+out_null_flip_sample_z = unlist(lapply(out_null_flip_sample$diagnostic.res1_simple, function(x) x$post$post_z))
+out_null_flip_sample_l0 = unlist(lapply(out_null_flip_sample$diagnostic.res1_simple, function(x) x$post$logl0))
+out_null_flip_sample_l1 = unlist(lapply(out_null_flip_sample$diagnostic.res1_simple, function(x) x$post$logl1))
+out_null_flip_sample_lr = unlist(lapply(out_null_flip_sample$diagnostic.res1_simple, function(x) x$post$logLR))
+
+out_null_flip_IBS_mean = unlist(lapply(out_null_flip_IBS$diagnostic.res1_simple, function(x) x$post$postmean))
+out_null_flip_IBS_z = unlist(lapply(out_null_flip_IBS$diagnostic.res1_simple, function(x) x$post$post_z))
+out_null_flip_IBS_l0 = unlist(lapply(out_null_flip_IBS$diagnostic.res1_simple, function(x) x$post$logl0))
+out_null_flip_IBS_l1 = unlist(lapply(out_null_flip_IBS$diagnostic.res1_simple, function(x) x$post$logl1))
+out_null_flip_IBS_lr = unlist(lapply(out_null_flip_IBS$diagnostic.res1_simple, function(x) x$post$logLR))
+
+out_null_flip_CLM_mean = unlist(lapply(out_null_flip_CLM$diagnostic.res1_simple, function(x) x$post$postmean))
+out_null_flip_CLM_z = unlist(lapply(out_null_flip_CLM$diagnostic.res1_simple, function(x) x$post$post_z))
+out_null_flip_CLM_l0 = unlist(lapply(out_null_flip_CLM$diagnostic.res1_simple, function(x) x$post$logl0))
+out_null_flip_CLM_l1 = unlist(lapply(out_null_flip_CLM$diagnostic.res1_simple, function(x) x$post$logl1))
+out_null_flip_CLM_lr = unlist(lapply(out_null_flip_CLM$diagnostic.res1_simple, function(x) x$post$logLR))
+```
+
+The red points corresponding to z scores with flipped sign. Using in-sample LD matrix (GBR), there are some flipped z scores with small standardized differences between observed z scores and conditional mean. This is because the flipped observed z score is very small in magnitude.
+
+```{r}
+par(mfrow=c(3,3))
+idx = which(z != z_flip)
+diff_sample = z_flip-out_null_flip_sample_mean; diff_IBS = z_flip-out_null_flip_IBS_mean; diff_CLM = z_flip-out_null_flip_CLM_mean; 
+ymax = ceiling(max(c(diff_sample, diff_IBS, diff_CLM))); ymin = floor(min(c(diff_sample, diff_IBS, diff_CLM)))
+plot(diff_sample, ylab='LD=GBR', main='z-conditional mean',cex=0.6, ylim = c(ymin, ymax))
+points(idx, diff_sample[idx], col='red', pch=16)
+plot(diff_IBS, ylab='LD=IBS', ylim = c(ymin, ymax))
+points(idx, diff_IBS[idx], col='red', pch=16)
+plot(diff_CLM, ylab='LD=CLM', ylim = c(ymin, ymax))
+points(idx, diff_CLM[idx], col='red', pch=16)
+
+ymax = ceiling(max(c(out_null_flip_sample_z, out_null_flip_IBS_z, out_null_flip_CLM_z))); ymin = floor(min(c(out_null_flip_sample_z, out_null_flip_IBS_z, out_null_flip_CLM_z)))
+plot(out_null_flip_sample_z, ylab='LD=GBR', main='standardized difference',cex=0.6, ylim = c(ymin, ymax))
+points(idx, out_null_flip_sample_z[idx], col='red', pch=16)
+plot(out_null_flip_IBS_z, ylab='LD=IBS', ylim = c(ymin, ymax))
+points(idx, out_null_flip_IBS_z[idx], col='red', pch=16)
+plot(out_null_flip_CLM_z, ylab='LD=CLM', ylim = c(ymin, ymax))
+points(idx, out_null_flip_CLM_z[idx], col='red', pch=16)
+
+hist(out_null_flip_sample_z, xlab='LD=GBR', main='Standardized Difference', breaks = 50, freq = FALSE)
+hist(out_null_flip_IBS_z, xlab='LD=IBS', main='Standardized Difference', breaks = 50, freq = FALSE)
+hist(out_null_flip_CLM_z, xlab='LD=CLM', main='Standardized Difference', breaks = 50, freq = FALSE)
+
+par(mfrow=c(1,3))
+plot(out_null_flip_sample_l0, out_null_flip_sample_l1, main='LD=GBR', xlab='log likelihood under null', ylab='log likelihood under alternative')
+points(out_null_flip_sample_l0[idx], out_null_flip_sample_l1[idx], col='red', pch=16)
+abline(0,1)
+plot(out_null_flip_IBS_l0, out_null_flip_IBS_l1, main='LD=IBS', xlab='log likelihood under null', ylab='log likelihood under alternative')
+points(out_null_flip_IBS_l0[idx], out_null_flip_IBS_l1[idx], col='red', pch=16)
+abline(0,1)
+plot(out_null_flip_CLM_l0, out_null_flip_CLM_l1, main='LD=CLM', xlab='log likelihood under null', ylab='log likelihood under alternative')
+points(out_null_flip_CLM_l0[idx], out_null_flip_CLM_l1[idx], col='red', pch=16)
+abline(0,1)
+```
+
+Comparing standardized difference from Simulation 1.1 and 1.2,
+```{r}
+par(mfrow=c(1,3))
+plot(out_null_sample_z, out_null_flip_sample_z, 
+     xlab='standardized difference from Simu1.1',
+     ylab='standardized difference from Simu1.2', main='LD=GBR')
+points(out_null_sample_z[idx], out_null_flip_sample_z[idx], col='red', pch=16)
+abline(0,1)
+plot(out_null_IBS_z, out_null_flip_IBS_z,
+     xlab='standardized difference from Simu1.1',
+     ylab='standardized difference from Simu1.2', main='LD=IBS')
+points(out_null_IBS_z[idx], out_null_flip_IBS_z[idx], col='red', pch=16)
+abline(0,1)
+plot(out_null_CLM_z, out_null_flip_CLM_z,
+     xlab='standardized difference from Simu1.1',
+     ylab='standardized difference from Simu1.2', main='LD=CLM')
+points(out_null_CLM_z[idx], out_null_flip_CLM_z[idx], col='red', pch=16)
+abline(0,1)
+```
+
+Comparing LR from Simulation 1.1 and 1.2,
+```{r}
+par(mfrow=c(1,3))
+plot(out_null_sample_lr, out_null_flip_sample_lr, ylim=c(-3000,500),
+     xlab='logLR from Simu1.1',
+     ylab='logLR from Simu1.2', main='LD=GBR')
+points(out_null_sample_lr[idx], out_null_flip_sample_lr[idx], col='red', pch=16)
+abline(0,1)
+plot(out_null_IBS_lr, out_null_flip_IBS_lr,
+     xlab='logLR from Simu1.1',
+     ylab='logLR from Simu1.2', main='LD=IBS')
+points(out_null_IBS_lr[idx], out_null_flip_IBS_lr[idx], col='red', pch=16)
+abline(0,1)
+plot(out_null_CLM_lr, out_null_flip_CLM_lr,
+     xlab='logLR from Simu1.1',
+     ylab='logLR from Simu1.2', main='LD=CLM')
+points(out_null_CLM_lr[idx], out_null_flip_CLM_lr[idx], col='red', pch=16)
+abline(0,1)
+```
+
+## Simulation 2.1: one signal
+
+There is one signal in this simulation. The PVE is 0.1.
+
+```{r}
+out_sample = out_signal %>% filter(susie_rss.ld_type == 'sample', susie_rss.correct_ld == FALSE)
+out_IBS = out_signal %>% filter(susie_rss.ld_type == 'IBS', susie_rss.correct_ld == FALSE)
+out_CLM = out_signal %>% filter(susie_rss.ld_type == 'CLM', susie_rss.correct_ld == FALSE)
+```
+
+### Check $s^2$
+
+```{r}
+par(mfrow=c(1,3))
+out_sample_s2 = apply(out_sample, 1, function(x) x$diagnostic.res1_simple$s2)
+out_IBS_s2 = apply(out_IBS, 1, function(x) x$diagnostic.res1_simple$s2)
+out_CLM_s2 = apply(out_CLM, 1, function(x) x$diagnostic.res1_simple$s2)
+
+plot(out_sample_s2, out_IBS_s2, xlab = 'LD = GBR', ylab='LD = IBS', main='GBR z scores')
+abline(0,1)
+plot(out_sample_s2, out_CLM_s2, xlab = 'LD = GBR', ylab='LD = CLM', main='GBR z scores')
+abline(0,1)
+plot(out_IBS_s2, out_CLM_s2, xlab = 'LD = IBS', ylab='LD = CLM', main='GBR z scores')
+abline(0,1)
+```
+
+### Check conditional mean and Likelihood
+
+```{r}
+z = unlist(lapply(out_sample$diagnostic.res1_simple, function(x) x$post$z))
+out_sample_mean = unlist(lapply(out_sample$diagnostic.res1_simple, function(x) x$post$postmean))
+out_sample_z = unlist(lapply(out_sample$diagnostic.res1_simple, function(x) x$post$post_z))
+out_sample_l0 = unlist(lapply(out_sample$diagnostic.res1_simple, function(x) x$post$logl0))
+out_sample_l1 = unlist(lapply(out_sample$diagnostic.res1_simple, function(x) x$post$logl1))
+out_sample_lr = unlist(lapply(out_sample$diagnostic.res1_simple, function(x) x$post$logLR))
+
+out_IBS_mean = unlist(lapply(out_IBS$diagnostic.res1_simple, function(x) x$post$postmean))
+out_IBS_z = unlist(lapply(out_IBS$diagnostic.res1_simple, function(x) x$post$post_z))
+out_IBS_l0 = unlist(lapply(out_IBS$diagnostic.res1_simple, function(x) x$post$logl0))
+out_IBS_l1 = unlist(lapply(out_IBS$diagnostic.res1_simple, function(x) x$post$logl1))
+out_IBS_lr = unlist(lapply(out_IBS$diagnostic.res1_simple, function(x) x$post$logLR))
+
+out_CLM_mean = unlist(lapply(out_CLM$diagnostic.res1_simple, function(x) x$post$postmean))
+out_CLM_z = unlist(lapply(out_CLM$diagnostic.res1_simple, function(x) x$post$post_z))
+out_CLM_l0 = unlist(lapply(out_CLM$diagnostic.res1_simple, function(x) x$post$logl0))
+out_CLM_l1 = unlist(lapply(out_CLM$diagnostic.res1_simple, function(x) x$post$logl1))
+out_CLM_lr = unlist(lapply(out_CLM$diagnostic.res1_simple, function(x) x$post$logLR))
+```
+
+```{r}
+par(mfrow=c(3,3))
+diff_sample = z-out_sample_mean; diff_IBS = z-out_IBS_mean; diff_CLM = z-out_CLM_mean; 
+ymax = ceiling(max(c(diff_sample, diff_IBS, diff_CLM))); ymin = floor(min(c(diff_sample, diff_IBS, diff_CLM)))
+plot(diff_sample, ylab='LD=GBR', main='z-conditional mean',cex=0.6, ylim = c(ymin, ymax))
+plot(diff_IBS, ylab='LD=IBS', ylim = c(ymin, ymax))
+plot(diff_CLM, ylab='LD=CLM', ylim = c(ymin, ymax))
+
+ymax = ceiling(max(c(out_sample_z, out_IBS_z, out_CLM_z))); ymin = floor(min(c(out_sample_z, out_IBS_z, out_CLM_z)))
+plot(out_sample_z, ylab='LD=GBR', main='standardized difference',cex=0.6, ylim = c(ymin, ymax))
+plot(out_IBS_z, ylab='LD=IBS', ylim = c(ymin, ymax))
+plot(out_CLM_z, ylab='LD=CLM', ylim = c(ymin, ymax))
+
+hist(out_sample_z, xlab='LD=GBR', main='Standardized Difference', breaks = 50, freq = FALSE)
+hist(out_IBS_z, xlab='LD=IBS', main='Standardized Difference', breaks = 50, freq = FALSE)
+hist(out_CLM_z, xlab='LD=CLM', main='Standardized Difference', breaks = 50, freq = FALSE)
+
+par(mfrow=c(1,3))
+plot(out_sample_l0, out_sample_l1, main='LD=GBR', xlab='log likelihood under null', ylab='log likelihood under alternative')
+abline(0,1)
+plot(out_IBS_l0, out_IBS_l1, main='LD=IBS', xlab='log likelihood under null', ylab='log likelihood under alternative')
+abline(0,1)
+plot(out_CLM_l0, out_CLM_l1, main='LD=CLM', xlab='log likelihood under null', ylab='log likelihood under alternative')
+abline(0,1)
+```
+
+## Simulation 2.2: flipped sign at signal
+
+Based on simulation 2.1, we flipped sign of signal.
+
+```{r}
+out_flip_sample = out_signal_flip_signal %>% filter(susie_rss.ld_type == 'sample', susie_rss.correct_ld == FALSE)
+out_flip_IBS = out_signal_flip_signal %>% filter(susie_rss.ld_type == 'IBS', susie_rss.correct_ld == FALSE)
+out_flip_CLM = out_signal_flip_signal %>% filter(susie_rss.ld_type == 'CLM', susie_rss.correct_ld == FALSE)
+```
+
+### Check $s^2$
+
+```{r}
+par(mfrow=c(1,3))
+out_flip_sample_s2 = apply(out_flip_sample, 1, function(x) x$diagnostic.res1_simple$s2)
+out_flip_IBS_s2 = apply(out_flip_IBS, 1, function(x) x$diagnostic.res1_simple$s2)
+out_flip_CLM_s2 = apply(out_flip_CLM, 1, function(x) x$diagnostic.res1_simple$s2)
+
+plot(out_flip_sample_s2, out_flip_IBS_s2, xlab = 'LD = GBR', ylab='LD = IBS', main='GBR z scores')
+abline(0,1)
+plot(out_flip_sample_s2, out_flip_CLM_s2, xlab = 'LD = GBR', ylab='LD = CLM', main='GBR z scores')
+abline(0,1)
+plot(out_flip_IBS_s2, out_flip_CLM_s2, xlab = 'LD = IBS', ylab='LD = CLM', main='GBR z scores')
+abline(0,1)
+```
+
+### Check conditional mean and Likelihood
+
+```{r}
+z_flip = unlist(lapply(out_flip_sample$diagnostic.res1_simple, function(x) x$post$z))
+out_flip_sample_mean = unlist(lapply(out_flip_sample$diagnostic.res1_simple, function(x) x$post$postmean))
+out_flip_sample_z = unlist(lapply(out_flip_sample$diagnostic.res1_simple, function(x) x$post$post_z))
+out_flip_sample_l0 = unlist(lapply(out_flip_sample$diagnostic.res1_simple, function(x) x$post$logl0))
+out_flip_sample_l1 = unlist(lapply(out_flip_sample$diagnostic.res1_simple, function(x) x$post$logl1))
+out_flip_sample_lr = unlist(lapply(out_flip_sample$diagnostic.res1_simple, function(x) x$post$logLR))
+
+out_flip_IBS_mean = unlist(lapply(out_flip_IBS$diagnostic.res1_simple, function(x) x$post$postmean))
+out_flip_IBS_z = unlist(lapply(out_flip_IBS$diagnostic.res1_simple, function(x) x$post$post_z))
+out_flip_IBS_l0 = unlist(lapply(out_flip_IBS$diagnostic.res1_simple, function(x) x$post$logl0))
+out_flip_IBS_l1 = unlist(lapply(out_flip_IBS$diagnostic.res1_simple, function(x) x$post$logl1))
+out_flip_IBS_lr = unlist(lapply(out_flip_IBS$diagnostic.res1_simple, function(x) x$post$logLR))
+
+out_flip_CLM_mean = unlist(lapply(out_flip_CLM$diagnostic.res1_simple, function(x) x$post$postmean))
+out_flip_CLM_z = unlist(lapply(out_flip_CLM$diagnostic.res1_simple, function(x) x$post$post_z))
+out_flip_CLM_l0 = unlist(lapply(out_flip_CLM$diagnostic.res1_simple, function(x) x$post$logl0))
+out_flip_CLM_l1 = unlist(lapply(out_flip_CLM$diagnostic.res1_simple, function(x) x$post$logl1))
+out_flip_CLM_lr = unlist(lapply(out_flip_CLM$diagnostic.res1_simple, function(x) x$post$logLR))
+```
+
+```{r}
+par(mfrow=c(3,3))
+idx = which(z != z_flip)
+diff_sample = z_flip-out_flip_sample_mean; diff_IBS = z_flip-out_flip_IBS_mean; diff_CLM = z_flip-out_flip_CLM_mean; 
+ymax = ceiling(max(c(diff_sample, diff_IBS, diff_CLM))); ymin = floor(min(c(diff_sample, diff_IBS, diff_CLM)))
+plot(diff_sample, ylab='LD=GBR', main='z-conditional mean',cex=0.6, ylim = c(ymin, ymax))
+points(idx, diff_sample[idx], col='red', pch=16)
+plot(diff_IBS, ylab='LD=IBS', ylim = c(ymin, ymax))
+points(idx, diff_IBS[idx], col='red', pch=16)
+plot(diff_CLM, ylab='LD=CLM', ylim = c(ymin, ymax))
+points(idx, diff_CLM[idx], col='red', pch=16)
+
+ymax = ceiling(max(c(out_flip_sample_z, out_flip_IBS_z, out_flip_CLM_z))); ymin = floor(min(c(out_flip_sample_z, out_flip_IBS_z, out_flip_CLM_z)))
+plot(out_flip_sample_z, ylab='LD=GBR', main='standardized difference',cex=0.6, ylim = c(ymin, ymax))
+points(idx, out_flip_sample_z[idx], col='red', pch=16)
+plot(out_flip_IBS_z, ylab='LD=IBS', ylim = c(ymin, ymax))
+points(idx, out_flip_IBS_z[idx], col='red', pch=16)
+plot(out_flip_CLM_z, ylab='LD=CLM', ylim = c(ymin, ymax))
+points(idx, out_flip_CLM_z[idx], col='red', pch=16)
+
+hist(out_flip_sample_z, xlab='LD=GBR', main='Standardized Difference', breaks = 50, freq = FALSE)
+hist(out_flip_IBS_z, xlab='LD=IBS', main='Standardized Difference', breaks = 50, freq = FALSE)
+hist(out_flip_CLM_z, xlab='LD=CLM', main='Standardized Difference', breaks = 50, freq = FALSE)
+
+par(mfrow=c(1,3))
+plot(out_flip_sample_l0, out_flip_sample_l1, main='LD=GBR', xlab='log likelihood under null', ylab='log likelihood under alternative')
+points(out_flip_sample_l0[idx], out_flip_sample_l1[idx], col='red', pch=16)
+abline(0,1)
+plot(out_flip_IBS_l0, out_flip_IBS_l1, main='LD=IBS', xlab='log likelihood under null', ylab='log likelihood under alternative')
+points(out_flip_IBS_l0[idx], out_flip_IBS_l1[idx], col='red', pch=16)
+abline(0,1)
+plot(out_flip_CLM_l0, out_flip_CLM_l1, main='LD=CLM', xlab='log likelihood under null', ylab='log likelihood under alternative')
+points(out_flip_CLM_l0[idx], out_flip_CLM_l1[idx], col='red', pch=16)
+abline(0,1)
+```
+
+Comparing standardized difference from Simulation 2.1 and 2.2,
+```{r}
+par(mfrow=c(1,3))
+plot(out_sample_z, out_flip_sample_z, 
+     xlab='standardized difference from Simu2.1',
+     ylab='standardized difference from Simu2.2', main='LD=GBR')
+points(out_sample_z[idx], out_flip_sample_z[idx], col='red', pch=16)
+abline(0,1)
+plot(out_IBS_z, out_flip_IBS_z,
+     xlab='standardized difference from Simu2.1',
+     ylab='standardized difference from Simu2.2', main='LD=IBS')
+points(out_IBS_z[idx], out_flip_IBS_z[idx], col='red', pch=16)
+abline(0,1)
+plot(out_CLM_z, out_flip_CLM_z,
+     xlab='standardized difference from Simu2.1',
+     ylab='standardized difference from Simu2.2', main='LD=CLM')
+points(out_CLM_z[idx], out_flip_CLM_z[idx], col='red', pch=16)
+abline(0,1)
+```
+
+Comparing LR from Simulation 2.1 and 2.2,
+```{r}
+par(mfrow=c(1,3))
+plot(out_sample_lr, out_flip_sample_lr, ylim=c(-3000,500),
+     xlab='logLR from Simu2.1',
+     ylab='logLR from Simu2.2', main='LD=GBR')
+points(out_sample_lr[idx], out_flip_sample_lr[idx], col='red', pch=16)
+abline(0,1)
+plot(out_IBS_lr, out_flip_IBS_lr,
+     xlab='logLR from Simu2.1',
+     ylab='logLR from Simu2.2', main='LD=IBS')
+points(out_IBS_lr[idx], out_flip_IBS_lr[idx], col='red', pch=16)
+abline(0,1)
+plot(out_CLM_lr, out_flip_CLM_lr,
+     xlab='logLR from Simu2.1',
+     ylab='logLR from Simu2.2', main='LD=CLM')
+points(out_CLM_lr[idx], out_flip_CLM_lr[idx], col='red', pch=16)
+abline(0,1)
+```
+
+## Simulation 2.3: flipped sign at null
+
+```{r}
+out_flip_null_sample = out_signal_flip_null %>% filter(susie_rss.ld_type == 'sample', susie_rss.correct_ld == FALSE)
+out_flip_null_IBS = out_signal_flip_null %>% filter(susie_rss.ld_type == 'IBS', susie_rss.correct_ld == FALSE)
+out_flip_null_CLM = out_signal_flip_null %>% filter(susie_rss.ld_type == 'CLM', susie_rss.correct_ld == FALSE)
+```
+
+### Check $s^2$
+
+```{r}
+par(mfrow=c(1,3))
+out_flip_null_sample_s2 = apply(out_flip_null_sample, 1, function(x) x$diagnostic.res1_simple$s2)
+out_flip_null_IBS_s2 = apply(out_flip_null_IBS, 1, function(x) x$diagnostic.res1_simple$s2)
+out_flip_null_CLM_s2 = apply(out_flip_null_CLM, 1, function(x) x$diagnostic.res1_simple$s2)
+
+plot(out_flip_null_sample_s2, out_flip_null_IBS_s2, xlab = 'LD = GBR', ylab='LD = IBS', main='GBR z scores')
+abline(0,1)
+plot(out_flip_null_sample_s2, out_flip_null_CLM_s2, xlab = 'LD = GBR', ylab='LD = CLM', main='GBR z scores')
+abline(0,1)
+plot(out_flip_null_IBS_s2, out_flip_null_CLM_s2, xlab = 'LD = IBS', ylab='LD = CLM', main='GBR z scores')
+abline(0,1)
+```
+
+### Check conditional mean and Likelihood
+
+```{r}
+z_flip = unlist(lapply(out_flip_null_sample$diagnostic.res1_simple, function(x) x$post$z))
+out_flip_null_sample_mean = unlist(lapply(out_flip_null_sample$diagnostic.res1_simple, function(x) x$post$postmean))
+out_flip_null_sample_z = unlist(lapply(out_flip_null_sample$diagnostic.res1_simple, function(x) x$post$post_z))
+out_flip_null_sample_l0 = unlist(lapply(out_flip_null_sample$diagnostic.res1_simple, function(x) x$post$logl0))
+out_flip_null_sample_l1 = unlist(lapply(out_flip_null_sample$diagnostic.res1_simple, function(x) x$post$logl1))
+out_flip_null_sample_lr = unlist(lapply(out_flip_null_sample$diagnostic.res1_simple, function(x) x$post$logLR))
+
+out_flip_null_IBS_mean = unlist(lapply(out_flip_null_IBS$diagnostic.res1_simple, function(x) x$post$postmean))
+out_flip_null_IBS_z = unlist(lapply(out_flip_null_IBS$diagnostic.res1_simple, function(x) x$post$post_z))
+out_flip_null_IBS_l0 = unlist(lapply(out_flip_null_IBS$diagnostic.res1_simple, function(x) x$post$logl0))
+out_flip_null_IBS_l1 = unlist(lapply(out_flip_null_IBS$diagnostic.res1_simple, function(x) x$post$logl1))
+out_flip_null_IBS_lr = unlist(lapply(out_flip_null_IBS$diagnostic.res1_simple, function(x) x$post$logLR))
+
+out_flip_null_CLM_mean = unlist(lapply(out_flip_null_CLM$diagnostic.res1_simple, function(x) x$post$postmean))
+out_flip_null_CLM_z = unlist(lapply(out_flip_null_CLM$diagnostic.res1_simple, function(x) x$post$post_z))
+out_flip_null_CLM_l0 = unlist(lapply(out_flip_null_CLM$diagnostic.res1_simple, function(x) x$post$logl0))
+out_flip_null_CLM_l1 = unlist(lapply(out_flip_null_CLM$diagnostic.res1_simple, function(x) x$post$logl1))
+out_flip_null_CLM_lr = unlist(lapply(out_flip_null_CLM$diagnostic.res1_simple, function(x) x$post$logLR))
+```
+
+```{r}
+par(mfrow=c(3,3))
+idx = which(z != z_flip)
+diff_sample = z_flip-out_flip_null_sample_mean; diff_IBS = z_flip-out_flip_null_IBS_mean; diff_CLM = z_flip-out_flip_null_CLM_mean; 
+ymax = ceiling(max(c(diff_sample, diff_IBS, diff_CLM))); ymin = floor(min(c(diff_sample, diff_IBS, diff_CLM)))
+plot(diff_sample, ylab='LD=GBR', main='z-conditional mean',cex=0.6, ylim = c(ymin, ymax))
+points(idx, diff_sample[idx], col='red', pch=16)
+plot(diff_IBS, ylab='LD=IBS', ylim = c(ymin, ymax))
+points(idx, diff_IBS[idx], col='red', pch=16)
+plot(diff_CLM, ylab='LD=CLM', ylim = c(ymin, ymax))
+points(idx, diff_CLM[idx], col='red', pch=16)
+
+ymax = ceiling(max(c(out_flip_null_sample_z, out_flip_null_IBS_z, out_flip_null_CLM_z))); ymin = floor(min(c(out_flip_null_sample_z, out_flip_null_IBS_z, out_flip_null_CLM_z)))
+plot(out_flip_null_sample_z, ylab='LD=GBR', main='standardized difference',cex=0.6, ylim = c(ymin, ymax))
+points(idx, out_flip_null_sample_z[idx], col='red', pch=16)
+plot(out_flip_null_IBS_z, ylab='LD=IBS', ylim = c(ymin, ymax))
+points(idx, out_flip_null_IBS_z[idx], col='red', pch=16)
+plot(out_flip_null_CLM_z, ylab='LD=CLM', ylim = c(ymin, ymax))
+points(idx, out_flip_null_CLM_z[idx], col='red', pch=16)
+
+hist(out_flip_null_sample_z, xlab='LD=GBR', main='Standardized Difference', breaks = 50, freq = FALSE)
+hist(out_flip_null_IBS_z, xlab='LD=IBS', main='Standardized Difference', breaks = 50, freq = FALSE)
+hist(out_flip_null_CLM_z, xlab='LD=CLM', main='Standardized Difference', breaks = 50, freq = FALSE)
+
+par(mfrow=c(1,3))
+plot(out_flip_null_sample_l0, out_flip_null_sample_l1, main='LD=GBR', xlab='log likelihood under null', ylab='log likelihood under alternative')
+points(out_flip_null_sample_l0[idx], out_flip_null_sample_l1[idx], col='red', pch=16)
+abline(0,1)
+plot(out_flip_null_IBS_l0, out_flip_null_IBS_l1, main='LD=IBS', xlab='log likelihood under null', ylab='log likelihood under alternative')
+points(out_flip_null_IBS_l0[idx], out_flip_null_IBS_l1[idx], col='red', pch=16)
+abline(0,1)
+plot(out_flip_null_CLM_l0, out_flip_null_CLM_l1, main='LD=CLM', xlab='log likelihood under null', ylab='log likelihood under alternative')
+points(out_flip_null_CLM_l0[idx], out_flip_null_CLM_l1[idx], col='red', pch=16)
+abline(0,1)
+```
+
+Comparing standardized difference from Simulation 2.1 and 2.3,
+```{r}
+par(mfrow=c(1,3))
+plot(out_sample_z, out_flip_null_sample_z, 
+     xlab='standardized difference from Simu2.1',
+     ylab='standardized difference from Simu2.3', main='LD=GBR')
+points(out_sample_z[idx], out_flip_null_sample_z[idx], col='red', pch=16)
+abline(0,1)
+plot(out_IBS_z, out_flip_null_IBS_z,
+     xlab='standardized difference from Simu2.1',
+     ylab='standardized difference from Simu2.3', main='LD=IBS')
+points(out_IBS_z[idx], out_flip_null_IBS_z[idx], col='red', pch=16)
+abline(0,1)
+plot(out_CLM_z, out_flip_null_CLM_z,
+     xlab='standardized difference from Simu2.1',
+     ylab='standardized difference from Simu2.3', main='LD=CLM')
+points(out_CLM_z[idx], out_flip_null_CLM_z[idx], col='red', pch=16)
+abline(0,1)
+```
+
+Comparing LR from Simulation 2.1 and 2.3,
+```{r}
+par(mfrow=c(1,3))
+plot(out_sample_lr, out_flip_null_sample_lr, ylim=c(-3000,500),
+     xlab='logLR from Simu2.1',
+     ylab='logLR from Simu2.3', main='LD=GBR')
+points(out_sample_lr[idx], out_flip_null_sample_lr[idx], col='red', pch=16)
+abline(0,1)
+plot(out_IBS_lr, out_flip_null_IBS_lr,
+     xlab='logLR from Simu2.1',
+     ylab='logLR from Simu2.3', main='LD=IBS')
+points(out_IBS_lr[idx], out_flip_null_IBS_lr[idx], col='red', pch=16)
+abline(0,1)
+plot(out_CLM_lr, out_flip_null_CLM_lr,
+     xlab='logLR from Simu2.1',
+     ylab='logLR from Simu2.3', main='LD=CLM')
+points(out_CLM_lr[idx], out_flip_null_CLM_lr[idx], col='red', pch=16)
+abline(0,1)
+```
