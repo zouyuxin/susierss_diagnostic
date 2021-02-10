@@ -9,9 +9,9 @@ output:
 
 There are two goals in diagnostic:
 
-1. Check the consistency between z scores and LD matrix;
+1. Check the consistency between z scores and LD matrix using $s^2$;
 
-2. Detect allele switch issue (flipped sign in z score).
+2. Detect allele switch issue (flipped sign in z score) using conditional distribution.
 
 In diagnostic, we assume the following model,
 $$
@@ -39,7 +39,7 @@ In the following simulation, we extract 200 regions from 1000 Genome data using 
 
 **Summary**
 
-In summary, a large $s^2$ indicates that the z scores and LD matrix are mismatched. One mismatch is that the LD matrix is from the reference panel, or another population. The $s^2$ using LD from CLM is larger than the one using LD from IBS. The other mismatch is that some SNPs have flipped z scores. The flipped z score has large log likelihood ratio. 
+In summary, a large $s^2$ indicates that the z scores and LD matrix are mismatched. One mismatch is that the LD matrix is from the reference panel, or another population. The $s^2$ using LD from CLM is larger than the one using LD from IBS. The other mismatch is that some SNPs have flipped z scores. The flipped z score has larger log likelihood ratio. In Simulation 1.1 (null and no flip), there are SNPs with large log likelihood ratio when the LD matrix is from IBS or CLM. This may be due to the inaccuracy in LD matrix, the conditional distribution depends on the LD matrix. 
 
 ```{r message=FALSE}
 library(tibble)
@@ -479,6 +479,8 @@ abline(0,1)
 ```
 
 ## Simulation 2.3: flipped sign at null
+
+Based on Simulation 2.1, we randomly flipped sign of one non-signal z score.
 
 ```{r}
 out_flip_null_sample = out_signal_flip_null %>% filter(susie_rss.ld_type == 'sample', susie_rss.correct_ld == FALSE)
