@@ -4,13 +4,12 @@
 %include modules/simulate
 %include modules/model
 %include modules/method
-%include modules/score
 
 DSC:
   define:
     simulate: sim_gaussian_null, sim_gaussian
   run:
-    default: data * simulate * get_sumstats * flip_z * (susie_rss * score_susie, diagnostic)
+    default: data * simulate * get_sumstats * flip_z * susie_rss * diagnostic
   exec_path: code
   output: output/rss_diagnostic
   global:

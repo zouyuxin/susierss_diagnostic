@@ -5,8 +5,10 @@ susie_rss: susie_rss.R
   z: $z
   L: 10
   ld: $ld
-  ld_type: "sample", "r.IBS", "r.CLM"
-  z_ld_weight: 0, 0.006667, 0.009346
+  N: $N
+  ld_type: "sample", "IBS", "CLM"
+  correct_ld: FALSE, TRUE
   estimate_residual_variance: TRUE
   $fitted: res$fitted
   $posterior: res$posterior
+  $ld_setting: list(ld=ld_type, correct_ld=correct_ld)

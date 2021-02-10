@@ -25,5 +25,12 @@ susie_rss_multiple = function(Z, R, L, z_ld_weight, estimate_residual_variance) 
 
 library(data.table);
 r = ld[[ld_type]]
+if(correct_ld){
+  N = N[[ld_type]]
+  z_ld_weight = 1/N
+}else{
+  z_ld_weight = 0
+}
 
 res = susie_rss_multiple(z, r, L, z_ld_weight, estimate_residual_variance)
+

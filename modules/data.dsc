@@ -5,7 +5,8 @@ data: misc.R + data.R
   dataset: Shell{head -${n_dataset} ${data_file}}
   plinkfile: file(plink)
   $X: X
-  $ld: list(sample = r.sample, r.IBS = r.IBS, r.CLM = r.CLM)
+  $ld: list(sample = r.sample, IBS = r.IBS, CLM = r.CLM)
+  $N: list(sample = N.GBR, IBS = N.IBS, CLM = N.CLM)
   $r_IBS_2norm: r.IBS.2dist
   $r_CLM_2norm: r.CLM.2dist
   $r_IBS_maxnorm: r.IBS.Mdist

@@ -1,13 +1,20 @@
 # method
 
-diagnostic: diagnostic.R
+diagnostic: susie_score.R + R(sc = susie_scores_multiple($(fitted), $(meta)$true_coef)) + diagnostic.R
   ld: $ld
   z: $z
-  ld_type: "sample", "r.IBS", "r.CLM"
-  z_ld_weight: 0, 0.006667, 0.009346
+  N: $N
+  ld_setting: $ld_setting
+  $total: sc$total
+  $valid: sc$valid
+  $converged: sc$converged
+  $signal_pip: sc$signal_pip
+  $pip: sc$pip
   $ld_eigenval: eigenld$values
-  $U1z: zcol_sub
-  $U0z: znull_sub
+  $U1z: zcol
+  $U0z: znull
   $Uz: Uz
-  $res_simple: res1
-  $res_mle: res2
+  $res1_simple: res1
+  $res1_mle: res1.optim
+  $res2: res2
+  $res3: res3
