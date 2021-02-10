@@ -12,4 +12,4 @@ SuSiE-RSS model diagnostic
 
 Simulation under null: [result](diagnostic_null.html)
 
-Simulation: [result](diagnostic.html)
+Simulation: [result](diagnostic_lr.html)
