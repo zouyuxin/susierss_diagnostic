@@ -33,6 +33,12 @@ $$
 LR = \frac{p(-\hat{z}_j | \hat{z}_{-j})}{p(\hat{z}_j | \hat{z}_{-j})}
 $$
 
+From the simulation, the standardized differences between observed z score and the conditional mean is longer-tailed than N(0,1). We use a mixture of normals to model the heavier tail empirically. We model the conditional distribution as
+$$
+\hat{z}_j | \hat{z}_{-j} \sim \sum_{k=1}^{K} \pi_k N(-\frac{1}{\Omega_{jj}} \Omega_{j,-j} \hat{z}_{-j},\frac{\sigma_k^2}{\Omega_{jj}}), \Omega = (\sigma^2 R + s^2 I)^{-1}.
+$$
+The $\sigma_k$ is a fixed dense grid, the minimum value is $0.8$, the maximum value is $2\sqrt{max(\text{standardized difference}^2)}$. We estimate $\pi_k$ using `mixsqp`. The likelihood ratio test is based on the mixture distribution.
+
 **Simulation Setting**
 
 In the following simulation, we extract 200 regions from 1000 Genome data using GBR (British in England and Scotland), IBS (Iberian Populations in Spain) and CLM (Colombians in Medellin, Colombia) population. We got 1000 Genome genotypes from ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/supporting/hd_genotype_chip, ALL.chip.omni_broad_sanger_combined.20140818.snps.genotypes.vcf.gz. The VCF file is converted to bed format using plink. We removed related samples. There are 103 GBR samples, 150 IBS samples and 107 CLM samples. We generated z scores based on GBR samples and we want to detect the inconsistency between z scores and LD (from GBR, IBS or CLM). 
@@ -65,7 +71,7 @@ out_null_sample = out_null %>% filter(susie_rss.ld_type == 'sample', susie_rss.c
 
 Here is a summary of number of SNPs in each region:
 ```{r}
-summary(sapply(out_null_sample$diagnostic.res1_simple, function(x) nrow(x$post)))
+summary(sapply(out_null_sample$diagnostic.res1_simple, function(x) length(x$post$z)))
 ```
 
 ## Simulation 1.1: under null (z = 0)
@@ -105,18 +111,35 @@ out_null_sample_z = unlist(lapply(out_null_sample$diagnostic.res1_simple, functi
 out_null_sample_l0 = unlist(lapply(out_null_sample$diagnostic.res1_simple, function(x) x$post$logl0))
 out_null_sample_l1 = unlist(lapply(out_null_sample$diagnostic.res1_simple, function(x) x$post$logl1))
 out_null_sample_lr = unlist(lapply(out_null_sample$diagnostic.res1_simple, function(x) x$post$logLR))
+out_null_sample_l0mix = unlist(lapply(out_null_sample$diagnostic.res1_simple, function(x) x$post$logl0mix))
+out_null_sample_l1mix = unlist(lapply(out_null_sample$diagnostic.res1_simple, function(x) x$post$logl1mix))
+out_null_sample_lrmix = unlist(lapply(out_null_sample$diagnostic.res1_simple, function(x) x$post$logLRmix))
+out_null_sample_l1mix[is.infinite(out_null_sample_l1mix)] = -1000
+out_null_sample_lrmix[is.infinite(out_null_sample_lrmix)] = -1000
 
 out_null_IBS_mean = unlist(lapply(out_null_IBS$diagnostic.res1_simple, function(x) x$post$postmean))
 out_null_IBS_z = unlist(lapply(out_null_IBS$diagnostic.res1_simple, function(x) x$post$post_z))
 out_null_IBS_l0 = unlist(lapply(out_null_IBS$diagnostic.res1_simple, function(x) x$post$logl0))
 out_null_IBS_l1 = unlist(lapply(out_null_IBS$diagnostic.res1_simple, function(x) x$post$logl1))
 out_null_IBS_lr = unlist(lapply(out_null_IBS$diagnostic.res1_simple, function(x) x$post$logLR))
+out_null_IBS_l0mix = unlist(lapply(out_null_IBS$diagnostic.res1_simple, function(x) x$post$logl0mix))
+out_null_IBS_l1mix = unlist(lapply(out_null_IBS$diagnostic.res1_simple, function(x) x$post$logl1mix))
+out_null_IBS_lrmix = unlist(lapply(out_null_IBS$diagnostic.res1_simple, function(x) x$post$logLRmix))
+out_null_IBS_l1mix[is.infinite(out_null_IBS_l1mix)] = -1000
+out_null_IBS_lrmix[is.infinite(out_null_IBS_lrmix)] = -1000
 
+zCLM = unlist(lapply(out_null_CLM$diagnostic.res1_simple, function(x) x$post$z))
 out_null_CLM_mean = unlist(lapply(out_null_CLM$diagnostic.res1_simple, function(x) x$post$postmean))
+out_null_CLM_var = unlist(lapply(out_null_CLM$diagnostic.res1_simple, function(x) x$post$postvar))
 out_null_CLM_z = unlist(lapply(out_null_CLM$diagnostic.res1_simple, function(x) x$post$post_z))
 out_null_CLM_l0 = unlist(lapply(out_null_CLM$diagnostic.res1_simple, function(x) x$post$logl0))
 out_null_CLM_l1 = unlist(lapply(out_null_CLM$diagnostic.res1_simple, function(x) x$post$logl1))
 out_null_CLM_lr = unlist(lapply(out_null_CLM$diagnostic.res1_simple, function(x) x$post$logLR))
+out_null_CLM_l0mix = unlist(lapply(out_null_CLM$diagnostic.res1_simple, function(x) x$post$logl0mix))
+out_null_CLM_l1mix = unlist(lapply(out_null_CLM$diagnostic.res1_simple, function(x) x$post$logl1mix))
+out_null_CLM_lrmix = unlist(lapply(out_null_CLM$diagnostic.res1_simple, function(x) x$post$logLRmix))
+out_null_CLM_l1mix[is.infinite(out_null_CLM_l1mix)] = -1000
+out_null_CLM_lrmix[is.infinite(out_null_CLM_lrmix)] = -1000
 ```
 
 ```{r}
@@ -132,16 +155,26 @@ plot(out_null_sample_z, ylab='LD=GBR', main='standardized difference',cex=0.6, y
 plot(out_null_IBS_z, ylab='LD=IBS', ylim = c(ymin, ymax))
 plot(out_null_CLM_z, ylab='LD=CLM', ylim = c(ymin, ymax))
 
-hist(out_null_sample_z, xlab='LD=GBR', main='Standardized Difference', breaks = 50, freq = FALSE)
-hist(out_null_IBS_z, xlab='LD=IBS', main='Standardized Difference', breaks = 50, freq = FALSE)
-hist(out_null_CLM_z, xlab='LD=CLM', main='Standardized Difference', breaks = 50, freq = FALSE)
+qqnorm(out_null_sample_z, main='Standardized Difference LD=GBR')
+qqline(out_null_sample_z)
+qqnorm(out_null_IBS_z, main='Standardized Difference LD=IBS')
+qqline(out_null_IBS_z)
+qqnorm(out_null_CLM_z, main='Standardized Difference LD=CLM')
+qqline(out_null_CLM_z)
 
-par(mfrow=c(1,3))
+par(mfrow=c(2,3))
 plot(out_null_sample_l0, out_null_sample_l1, main='LD=GBR', xlab='log likelihood under null', ylab='log likelihood under alternative')
 abline(0,1)
 plot(out_null_IBS_l0, out_null_IBS_l1, main='LD=IBS', xlab='log likelihood under null', ylab='log likelihood under alternative')
 abline(0,1)
 plot(out_null_CLM_l0, out_null_CLM_l1, main='LD=CLM', xlab='log likelihood under null', ylab='log likelihood under alternative')
+abline(0,1)
+
+plot(out_null_sample_l0mix, out_null_sample_l1mix, main='LD=GBR', xlab='log mix likelihood under null', ylab='log mix likelihood under alternative')
+abline(0,1)
+plot(out_null_IBS_l0mix, out_null_IBS_l1mix, main='LD=IBS', xlab='log mix likelihood under null', ylab='log mix likelihood under alternative')
+abline(0,1)
+plot(out_null_CLM_l0mix, out_null_CLM_l1mix, main='LD=CLM', xlab='log mix likelihood under null', ylab='log mix likelihood under alternative')
 abline(0,1)
 ```
 
@@ -186,18 +219,29 @@ out_null_flip_sample_z = unlist(lapply(out_null_flip_sample$diagnostic.res1_simp
 out_null_flip_sample_l0 = unlist(lapply(out_null_flip_sample$diagnostic.res1_simple, function(x) x$post$logl0))
 out_null_flip_sample_l1 = unlist(lapply(out_null_flip_sample$diagnostic.res1_simple, function(x) x$post$logl1))
 out_null_flip_sample_lr = unlist(lapply(out_null_flip_sample$diagnostic.res1_simple, function(x) x$post$logLR))
+out_null_flip_sample_l0mix = unlist(lapply(out_null_flip_sample$diagnostic.res1_simple, function(x) x$post$logl0mix))
+out_null_flip_sample_l1mix = unlist(lapply(out_null_flip_sample$diagnostic.res1_simple, function(x) x$post$logl1mix))
+out_null_flip_sample_lrmix = unlist(lapply(out_null_flip_sample$diagnostic.res1_simple, function(x) x$post$logLRmix))
+out_null_flip_sample_l1mix[is.infinite(out_null_flip_sample_l1mix)] = -1000
+out_null_flip_sample_lrmix[is.infinite(out_null_flip_sample_lrmix)] = -1000
 
 out_null_flip_IBS_mean = unlist(lapply(out_null_flip_IBS$diagnostic.res1_simple, function(x) x$post$postmean))
 out_null_flip_IBS_z = unlist(lapply(out_null_flip_IBS$diagnostic.res1_simple, function(x) x$post$post_z))
 out_null_flip_IBS_l0 = unlist(lapply(out_null_flip_IBS$diagnostic.res1_simple, function(x) x$post$logl0))
 out_null_flip_IBS_l1 = unlist(lapply(out_null_flip_IBS$diagnostic.res1_simple, function(x) x$post$logl1))
 out_null_flip_IBS_lr = unlist(lapply(out_null_flip_IBS$diagnostic.res1_simple, function(x) x$post$logLR))
+out_null_flip_IBS_l0mix = unlist(lapply(out_null_flip_IBS$diagnostic.res1_simple, function(x) x$post$logl0mix))
+out_null_flip_IBS_l1mix = unlist(lapply(out_null_flip_IBS$diagnostic.res1_simple, function(x) x$post$logl1mix))
+out_null_flip_IBS_lrmix = unlist(lapply(out_null_flip_IBS$diagnostic.res1_simple, function(x) x$post$logLRmix))
 
 out_null_flip_CLM_mean = unlist(lapply(out_null_flip_CLM$diagnostic.res1_simple, function(x) x$post$postmean))
 out_null_flip_CLM_z = unlist(lapply(out_null_flip_CLM$diagnostic.res1_simple, function(x) x$post$post_z))
 out_null_flip_CLM_l0 = unlist(lapply(out_null_flip_CLM$diagnostic.res1_simple, function(x) x$post$logl0))
 out_null_flip_CLM_l1 = unlist(lapply(out_null_flip_CLM$diagnostic.res1_simple, function(x) x$post$logl1))
 out_null_flip_CLM_lr = unlist(lapply(out_null_flip_CLM$diagnostic.res1_simple, function(x) x$post$logLR))
+out_null_flip_CLM_l0mix = unlist(lapply(out_null_flip_CLM$diagnostic.res1_simple, function(x) x$post$logl0mix))
+out_null_flip_CLM_l1mix = unlist(lapply(out_null_flip_CLM$diagnostic.res1_simple, function(x) x$post$logl1mix))
+out_null_flip_CLM_lrmix = unlist(lapply(out_null_flip_CLM$diagnostic.res1_simple, function(x) x$post$logLRmix))
 ```
 
 The red points corresponding to z scores with flipped sign. Using in-sample LD matrix (GBR), there are some flipped z scores with small standardized differences between observed z scores and conditional mean. This is because the flipped observed z score is very small in magnitude.
@@ -222,11 +266,14 @@ points(idx, out_null_flip_IBS_z[idx], col='red', pch=16)
 plot(out_null_flip_CLM_z, ylab='LD=CLM', ylim = c(ymin, ymax))
 points(idx, out_null_flip_CLM_z[idx], col='red', pch=16)
 
-hist(out_null_flip_sample_z, xlab='LD=GBR', main='Standardized Difference', breaks = 50, freq = FALSE)
-hist(out_null_flip_IBS_z, xlab='LD=IBS', main='Standardized Difference', breaks = 50, freq = FALSE)
-hist(out_null_flip_CLM_z, xlab='LD=CLM', main='Standardized Difference', breaks = 50, freq = FALSE)
+qqnorm(out_null_flip_sample_z, ylab='Standardized Difference LD=GBR')
+qqline(out_null_flip_sample_z)
+qqnorm(out_null_flip_IBS_z, ylab='Standardized Difference LD=IBS')
+qqline(out_null_flip_IBS_z)
+qqnorm(out_null_flip_CLM_z, ylab='Standardized Difference LD=CLM')
+qqline(out_null_flip_CLM_z)
 
-par(mfrow=c(1,3))
+par(mfrow=c(2,3))
 plot(out_null_flip_sample_l0, out_null_flip_sample_l1, main='LD=GBR', xlab='log likelihood under null', ylab='log likelihood under alternative')
 points(out_null_flip_sample_l0[idx], out_null_flip_sample_l1[idx], col='red', pch=16)
 abline(0,1)
@@ -235,6 +282,16 @@ points(out_null_flip_IBS_l0[idx], out_null_flip_IBS_l1[idx], col='red', pch=16)
 abline(0,1)
 plot(out_null_flip_CLM_l0, out_null_flip_CLM_l1, main='LD=CLM', xlab='log likelihood under null', ylab='log likelihood under alternative')
 points(out_null_flip_CLM_l0[idx], out_null_flip_CLM_l1[idx], col='red', pch=16)
+abline(0,1)
+
+plot(out_null_flip_sample_l0mix, out_null_flip_sample_l1mix, main='LD=GBR', xlab='log mix likelihood under null', ylab='log mix likelihood under alternative')
+points(out_null_flip_sample_l0mix[idx], out_null_flip_sample_l1mix[idx], col='red', pch=16)
+abline(0,1)
+plot(out_null_flip_IBS_l0mix, out_null_flip_IBS_l1mix, main='LD=IBS', xlab='log mix likelihood under null', ylab='log mix likelihood under alternative')
+points(out_null_flip_IBS_l0mix[idx], out_null_flip_IBS_l1mix[idx], col='red', pch=16)
+abline(0,1)
+plot(out_null_flip_CLM_l0mix, out_null_flip_CLM_l1mix, main='LD=CLM', xlab='log mix likelihood under null', ylab='log mix likelihood under alternative')
+points(out_null_flip_CLM_l0mix[idx], out_null_flip_CLM_l1mix[idx], col='red', pch=16)
 abline(0,1)
 ```
 
@@ -260,22 +317,44 @@ abline(0,1)
 
 Comparing LR from Simulation 1.1 and 1.2,
 ```{r}
-par(mfrow=c(1,3))
+par(mfrow=c(2,3))
 plot(out_null_sample_lr, out_null_flip_sample_lr, ylim=c(-3000,500),
      xlab='logLR from Simu1.1',
      ylab='logLR from Simu1.2', main='LD=GBR')
 points(out_null_sample_lr[idx], out_null_flip_sample_lr[idx], col='red', pch=16)
 abline(0,1)
+abline(h=0,v=0,lty=4)
 plot(out_null_IBS_lr, out_null_flip_IBS_lr,
      xlab='logLR from Simu1.1',
      ylab='logLR from Simu1.2', main='LD=IBS')
 points(out_null_IBS_lr[idx], out_null_flip_IBS_lr[idx], col='red', pch=16)
 abline(0,1)
+abline(h=0,v=0,lty=4)
 plot(out_null_CLM_lr, out_null_flip_CLM_lr,
      xlab='logLR from Simu1.1',
      ylab='logLR from Simu1.2', main='LD=CLM')
 points(out_null_CLM_lr[idx], out_null_flip_CLM_lr[idx], col='red', pch=16)
 abline(0,1)
+abline(h=0,v=0,lty=4)
+
+plot(out_null_sample_lrmix, out_null_flip_sample_lrmix,
+     xlab='logLRmix from Simu1.1',
+     ylab='logLRmix from Simu1.2', main='LD=GBR')
+points(out_null_sample_lrmix[idx], out_null_flip_sample_lrmix[idx], col='red', pch=16)
+abline(0,1)
+abline(h=0,v=0,lty=4)
+plot(out_null_IBS_lrmix, out_null_flip_IBS_lrmix,
+     xlab='logLRmix from Simu1.1',
+     ylab='logLRmix from Simu1.2', main='LD=IBS')
+points(out_null_IBS_lrmix[idx], out_null_flip_IBS_lrmix[idx], col='red', pch=16)
+abline(0,1)
+abline(h=0,v=0,lty=4)
+plot(out_null_CLM_lrmix, out_null_flip_CLM_lrmix,
+     xlab='logLRmix from Simu1.1',
+     ylab='logLRmix from Simu1.2', main='LD=CLM')
+points(out_null_CLM_lrmix[idx], out_null_flip_CLM_lrmix[idx], col='red', pch=16)
+abline(0,1)
+abline(h=0,v=0,lty=4)
 ```
 
 ## Simulation 2.1: one signal
@@ -313,18 +392,29 @@ out_sample_z = unlist(lapply(out_sample$diagnostic.res1_simple, function(x) x$po
 out_sample_l0 = unlist(lapply(out_sample$diagnostic.res1_simple, function(x) x$post$logl0))
 out_sample_l1 = unlist(lapply(out_sample$diagnostic.res1_simple, function(x) x$post$logl1))
 out_sample_lr = unlist(lapply(out_sample$diagnostic.res1_simple, function(x) x$post$logLR))
+out_sample_l0mix = unlist(lapply(out_sample$diagnostic.res1_simple, function(x) x$post$logl0mix))
+out_sample_l1mix = unlist(lapply(out_sample$diagnostic.res1_simple, function(x) x$post$logl1mix))
+out_sample_lrmix = unlist(lapply(out_sample$diagnostic.res1_simple, function(x) x$post$logLRmix))
+out_sample_l1mix[is.infinite(out_sample_l1mix)] = -1000
+out_sample_lrmix[is.infinite(out_sample_lrmix)] = -1000
 
 out_IBS_mean = unlist(lapply(out_IBS$diagnostic.res1_simple, function(x) x$post$postmean))
 out_IBS_z = unlist(lapply(out_IBS$diagnostic.res1_simple, function(x) x$post$post_z))
 out_IBS_l0 = unlist(lapply(out_IBS$diagnostic.res1_simple, function(x) x$post$logl0))
 out_IBS_l1 = unlist(lapply(out_IBS$diagnostic.res1_simple, function(x) x$post$logl1))
 out_IBS_lr = unlist(lapply(out_IBS$diagnostic.res1_simple, function(x) x$post$logLR))
+out_IBS_l0mix = unlist(lapply(out_IBS$diagnostic.res1_simple, function(x) x$post$logl0mix))
+out_IBS_l1mix = unlist(lapply(out_IBS$diagnostic.res1_simple, function(x) x$post$logl1mix))
+out_IBS_lrmix = unlist(lapply(out_IBS$diagnostic.res1_simple, function(x) x$post$logLRmix))
 
 out_CLM_mean = unlist(lapply(out_CLM$diagnostic.res1_simple, function(x) x$post$postmean))
 out_CLM_z = unlist(lapply(out_CLM$diagnostic.res1_simple, function(x) x$post$post_z))
 out_CLM_l0 = unlist(lapply(out_CLM$diagnostic.res1_simple, function(x) x$post$logl0))
 out_CLM_l1 = unlist(lapply(out_CLM$diagnostic.res1_simple, function(x) x$post$logl1))
 out_CLM_lr = unlist(lapply(out_CLM$diagnostic.res1_simple, function(x) x$post$logLR))
+out_CLM_l0mix = unlist(lapply(out_CLM$diagnostic.res1_simple, function(x) x$post$logl0mix))
+out_CLM_l1mix = unlist(lapply(out_CLM$diagnostic.res1_simple, function(x) x$post$logl1mix))
+out_CLM_lrmix = unlist(lapply(out_CLM$diagnostic.res1_simple, function(x) x$post$logLRmix))
 ```
 
 ```{r}
@@ -340,16 +430,26 @@ plot(out_sample_z, ylab='LD=GBR', main='standardized difference',cex=0.6, ylim =
 plot(out_IBS_z, ylab='LD=IBS', ylim = c(ymin, ymax))
 plot(out_CLM_z, ylab='LD=CLM', ylim = c(ymin, ymax))
 
-hist(out_sample_z, xlab='LD=GBR', main='Standardized Difference', breaks = 50, freq = FALSE)
-hist(out_IBS_z, xlab='LD=IBS', main='Standardized Difference', breaks = 50, freq = FALSE)
-hist(out_CLM_z, xlab='LD=CLM', main='Standardized Difference', breaks = 50, freq = FALSE)
+qqnorm(out_sample_z, ylab='Standardized Difference LD=GBR')
+qqline(out_sample_z)
+qqnorm(out_IBS_z, ylab='Standardized Difference LD=IBS')
+qqline(out_IBS_z)
+qqnorm(out_CLM_z, ylab='Standardized Difference LD=CLM')
+qqline(out_CLM_z)
 
-par(mfrow=c(1,3))
+par(mfrow=c(2,3))
 plot(out_sample_l0, out_sample_l1, main='LD=GBR', xlab='log likelihood under null', ylab='log likelihood under alternative')
 abline(0,1)
 plot(out_IBS_l0, out_IBS_l1, main='LD=IBS', xlab='log likelihood under null', ylab='log likelihood under alternative')
 abline(0,1)
 plot(out_CLM_l0, out_CLM_l1, main='LD=CLM', xlab='log likelihood under null', ylab='log likelihood under alternative')
+abline(0,1)
+
+plot(out_sample_l0mix, out_sample_l1mix, main='LD=GBR', xlab='log mix likelihood under null', ylab='log mix likelihood under alternative')
+abline(0,1)
+plot(out_IBS_l0mix, out_IBS_l1mix, main='LD=IBS', xlab='log mix likelihood under null', ylab='log mix likelihood under alternative')
+abline(0,1)
+plot(out_CLM_l0mix, out_CLM_l1mix, main='LD=CLM', xlab='log mix likelihood under null', ylab='log mix likelihood under alternative')
 abline(0,1)
 ```
 
@@ -388,18 +488,27 @@ out_flip_sample_z = unlist(lapply(out_flip_sample$diagnostic.res1_simple, functi
 out_flip_sample_l0 = unlist(lapply(out_flip_sample$diagnostic.res1_simple, function(x) x$post$logl0))
 out_flip_sample_l1 = unlist(lapply(out_flip_sample$diagnostic.res1_simple, function(x) x$post$logl1))
 out_flip_sample_lr = unlist(lapply(out_flip_sample$diagnostic.res1_simple, function(x) x$post$logLR))
+out_flip_sample_l0mix = unlist(lapply(out_flip_sample$diagnostic.res1_simple, function(x) x$post$logl0mix))
+out_flip_sample_l1mix = unlist(lapply(out_flip_sample$diagnostic.res1_simple, function(x) x$post$logl1mix))
+out_flip_sample_lrmix = unlist(lapply(out_flip_sample$diagnostic.res1_simple, function(x) x$post$logLRmix))
 
 out_flip_IBS_mean = unlist(lapply(out_flip_IBS$diagnostic.res1_simple, function(x) x$post$postmean))
 out_flip_IBS_z = unlist(lapply(out_flip_IBS$diagnostic.res1_simple, function(x) x$post$post_z))
 out_flip_IBS_l0 = unlist(lapply(out_flip_IBS$diagnostic.res1_simple, function(x) x$post$logl0))
 out_flip_IBS_l1 = unlist(lapply(out_flip_IBS$diagnostic.res1_simple, function(x) x$post$logl1))
 out_flip_IBS_lr = unlist(lapply(out_flip_IBS$diagnostic.res1_simple, function(x) x$post$logLR))
+out_flip_IBS_l0mix = unlist(lapply(out_flip_IBS$diagnostic.res1_simple, function(x) x$post$logl0mix))
+out_flip_IBS_l1mix = unlist(lapply(out_flip_IBS$diagnostic.res1_simple, function(x) x$post$logl1mix))
+out_flip_IBS_lrmix = unlist(lapply(out_flip_IBS$diagnostic.res1_simple, function(x) x$post$logLRmix))
 
 out_flip_CLM_mean = unlist(lapply(out_flip_CLM$diagnostic.res1_simple, function(x) x$post$postmean))
 out_flip_CLM_z = unlist(lapply(out_flip_CLM$diagnostic.res1_simple, function(x) x$post$post_z))
 out_flip_CLM_l0 = unlist(lapply(out_flip_CLM$diagnostic.res1_simple, function(x) x$post$logl0))
 out_flip_CLM_l1 = unlist(lapply(out_flip_CLM$diagnostic.res1_simple, function(x) x$post$logl1))
 out_flip_CLM_lr = unlist(lapply(out_flip_CLM$diagnostic.res1_simple, function(x) x$post$logLR))
+out_flip_CLM_l0mix = unlist(lapply(out_flip_CLM$diagnostic.res1_simple, function(x) x$post$logl0mix))
+out_flip_CLM_l1mix = unlist(lapply(out_flip_CLM$diagnostic.res1_simple, function(x) x$post$logl1mix))
+out_flip_CLM_lrmix = unlist(lapply(out_flip_CLM$diagnostic.res1_simple, function(x) x$post$logLRmix))
 ```
 
 ```{r}
@@ -422,11 +531,14 @@ points(idx, out_flip_IBS_z[idx], col='red', pch=16)
 plot(out_flip_CLM_z, ylab='LD=CLM', ylim = c(ymin, ymax))
 points(idx, out_flip_CLM_z[idx], col='red', pch=16)
 
-hist(out_flip_sample_z, xlab='LD=GBR', main='Standardized Difference', breaks = 50, freq = FALSE)
-hist(out_flip_IBS_z, xlab='LD=IBS', main='Standardized Difference', breaks = 50, freq = FALSE)
-hist(out_flip_CLM_z, xlab='LD=CLM', main='Standardized Difference', breaks = 50, freq = FALSE)
+qqnorm(out_flip_sample_z, ylab='Standardized Difference LD=GBR')
+qqline(out_flip_sample_z)
+qqnorm(out_flip_IBS_z, ylab='Standardized Difference LD=IBS')
+qqline(out_flip_IBS_z)
+qqnorm(out_flip_CLM_z, ylab='Standardized Difference LD=CLM')
+qqline(out_flip_CLM_z)
 
-par(mfrow=c(1,3))
+par(mfrow=c(2,3))
 plot(out_flip_sample_l0, out_flip_sample_l1, main='LD=GBR', xlab='log likelihood under null', ylab='log likelihood under alternative')
 points(out_flip_sample_l0[idx], out_flip_sample_l1[idx], col='red', pch=16)
 abline(0,1)
@@ -435,6 +547,16 @@ points(out_flip_IBS_l0[idx], out_flip_IBS_l1[idx], col='red', pch=16)
 abline(0,1)
 plot(out_flip_CLM_l0, out_flip_CLM_l1, main='LD=CLM', xlab='log likelihood under null', ylab='log likelihood under alternative')
 points(out_flip_CLM_l0[idx], out_flip_CLM_l1[idx], col='red', pch=16)
+abline(0,1)
+
+plot(out_flip_sample_l0mix, out_flip_sample_l1mix, main='LD=GBR', xlab='log mix likelihood under null', ylab='log mix likelihood under alternative')
+points(out_flip_sample_l0mix[idx], out_flip_sample_l1mix[idx], col='red', pch=16)
+abline(0,1)
+plot(out_flip_IBS_l0mix, out_flip_IBS_l1mix, main='LD=IBS', xlab='log mix likelihood under null', ylab='log mix likelihood under alternative')
+points(out_flip_IBS_l0mix[idx], out_flip_IBS_l1mix[idx], col='red', pch=16)
+abline(0,1)
+plot(out_flip_CLM_l0mix, out_flip_CLM_l1mix, main='LD=CLM', xlab='log mix likelihood under null', ylab='log mix likelihood under alternative')
+points(out_flip_CLM_l0mix[idx], out_flip_CLM_l1mix[idx], col='red', pch=16)
 abline(0,1)
 ```
 
@@ -460,22 +582,44 @@ abline(0,1)
 
 Comparing LR from Simulation 2.1 and 2.2,
 ```{r}
-par(mfrow=c(1,3))
+par(mfrow=c(2,3))
 plot(out_sample_lr, out_flip_sample_lr, ylim=c(-3000,500),
      xlab='logLR from Simu2.1',
      ylab='logLR from Simu2.2', main='LD=GBR')
 points(out_sample_lr[idx], out_flip_sample_lr[idx], col='red', pch=16)
 abline(0,1)
+abline(h=0, v=0, lty=4)
 plot(out_IBS_lr, out_flip_IBS_lr,
      xlab='logLR from Simu2.1',
      ylab='logLR from Simu2.2', main='LD=IBS')
 points(out_IBS_lr[idx], out_flip_IBS_lr[idx], col='red', pch=16)
 abline(0,1)
+abline(h=0, v=0, lty=4)
 plot(out_CLM_lr, out_flip_CLM_lr,
      xlab='logLR from Simu2.1',
      ylab='logLR from Simu2.2', main='LD=CLM')
 points(out_CLM_lr[idx], out_flip_CLM_lr[idx], col='red', pch=16)
 abline(0,1)
+abline(h=0, v=0, lty=4)
+
+plot(out_sample_lrmix, out_flip_sample_lrmix,
+     xlab='logLRmix from Simu2.1',
+     ylab='logLRmix from Simu2.2', main='LD=GBR')
+points(out_sample_lrmix[idx], out_flip_sample_lrmix[idx], col='red', pch=16)
+abline(0,1)
+abline(h=0, v=0, lty=4)
+plot(out_IBS_lrmix, out_flip_IBS_lrmix,
+     xlab='logLRmix from Simu2.1',
+     ylab='logLRmix from Simu2.2', main='LD=IBS')
+points(out_IBS_lrmix[idx], out_flip_IBS_lrmix[idx], col='red', pch=16)
+abline(0,1)
+abline(h=0, v=0, lty=4)
+plot(out_CLM_lrmix, out_flip_CLM_lrmix,
+     xlab='logLRmix from Simu2.1',
+     ylab='logLRmix from Simu2.2', main='LD=CLM')
+points(out_CLM_lrmix[idx], out_flip_CLM_lrmix[idx], col='red', pch=16)
+abline(0,1)
+abline(h=0, v=0, lty=4)
 ```
 
 ## Simulation 2.3: flipped sign at null
@@ -513,18 +657,29 @@ out_flip_null_sample_z = unlist(lapply(out_flip_null_sample$diagnostic.res1_simp
 out_flip_null_sample_l0 = unlist(lapply(out_flip_null_sample$diagnostic.res1_simple, function(x) x$post$logl0))
 out_flip_null_sample_l1 = unlist(lapply(out_flip_null_sample$diagnostic.res1_simple, function(x) x$post$logl1))
 out_flip_null_sample_lr = unlist(lapply(out_flip_null_sample$diagnostic.res1_simple, function(x) x$post$logLR))
+out_flip_null_sample_l0mix = unlist(lapply(out_flip_null_sample$diagnostic.res1_simple, function(x) x$post$logl0mix))
+out_flip_null_sample_l1mix = unlist(lapply(out_flip_null_sample$diagnostic.res1_simple, function(x) x$post$logl1mix))
+out_flip_null_sample_lrmix = unlist(lapply(out_flip_null_sample$diagnostic.res1_simple, function(x) x$post$logLRmix))
+out_flip_null_sample_l1mix[is.infinite(out_flip_null_sample_l1mix)] = -1000
+out_flip_null_sample_lrmix[is.infinite(out_flip_null_sample_lrmix)] = -1000
 
 out_flip_null_IBS_mean = unlist(lapply(out_flip_null_IBS$diagnostic.res1_simple, function(x) x$post$postmean))
 out_flip_null_IBS_z = unlist(lapply(out_flip_null_IBS$diagnostic.res1_simple, function(x) x$post$post_z))
 out_flip_null_IBS_l0 = unlist(lapply(out_flip_null_IBS$diagnostic.res1_simple, function(x) x$post$logl0))
 out_flip_null_IBS_l1 = unlist(lapply(out_flip_null_IBS$diagnostic.res1_simple, function(x) x$post$logl1))
 out_flip_null_IBS_lr = unlist(lapply(out_flip_null_IBS$diagnostic.res1_simple, function(x) x$post$logLR))
+out_flip_null_IBS_l0mix = unlist(lapply(out_flip_null_IBS$diagnostic.res1_simple, function(x) x$post$logl0mix))
+out_flip_null_IBS_l1mix = unlist(lapply(out_flip_null_IBS$diagnostic.res1_simple, function(x) x$post$logl1mix))
+out_flip_null_IBS_lrmix = unlist(lapply(out_flip_null_IBS$diagnostic.res1_simple, function(x) x$post$logLRmix))
 
 out_flip_null_CLM_mean = unlist(lapply(out_flip_null_CLM$diagnostic.res1_simple, function(x) x$post$postmean))
 out_flip_null_CLM_z = unlist(lapply(out_flip_null_CLM$diagnostic.res1_simple, function(x) x$post$post_z))
 out_flip_null_CLM_l0 = unlist(lapply(out_flip_null_CLM$diagnostic.res1_simple, function(x) x$post$logl0))
 out_flip_null_CLM_l1 = unlist(lapply(out_flip_null_CLM$diagnostic.res1_simple, function(x) x$post$logl1))
 out_flip_null_CLM_lr = unlist(lapply(out_flip_null_CLM$diagnostic.res1_simple, function(x) x$post$logLR))
+out_flip_null_CLM_l0mix = unlist(lapply(out_flip_null_CLM$diagnostic.res1_simple, function(x) x$post$logl0mix))
+out_flip_null_CLM_l1mix = unlist(lapply(out_flip_null_CLM$diagnostic.res1_simple, function(x) x$post$logl1mix))
+out_flip_null_CLM_lrmix = unlist(lapply(out_flip_null_CLM$diagnostic.res1_simple, function(x) x$post$logLRmix))
 ```
 
 ```{r}
@@ -547,11 +702,14 @@ points(idx, out_flip_null_IBS_z[idx], col='red', pch=16)
 plot(out_flip_null_CLM_z, ylab='LD=CLM', ylim = c(ymin, ymax))
 points(idx, out_flip_null_CLM_z[idx], col='red', pch=16)
 
-hist(out_flip_null_sample_z, xlab='LD=GBR', main='Standardized Difference', breaks = 50, freq = FALSE)
-hist(out_flip_null_IBS_z, xlab='LD=IBS', main='Standardized Difference', breaks = 50, freq = FALSE)
-hist(out_flip_null_CLM_z, xlab='LD=CLM', main='Standardized Difference', breaks = 50, freq = FALSE)
+qqnorm(out_flip_null_sample_z, xlab='Standardized Difference LD=GBR')
+qqline(out_flip_null_sample_z)
+qqnorm(out_flip_null_IBS_z, xlab='Standardized Difference LD=IBS')
+qqline(out_flip_null_IBS_z)
+qqnorm(out_flip_null_CLM_z, xlab='Standardized Difference LD=CLM')
+qqline(out_flip_null_CLM_z)
 
-par(mfrow=c(1,3))
+par(mfrow=c(2,3))
 plot(out_flip_null_sample_l0, out_flip_null_sample_l1, main='LD=GBR', xlab='log likelihood under null', ylab='log likelihood under alternative')
 points(out_flip_null_sample_l0[idx], out_flip_null_sample_l1[idx], col='red', pch=16)
 abline(0,1)
@@ -560,6 +718,16 @@ points(out_flip_null_IBS_l0[idx], out_flip_null_IBS_l1[idx], col='red', pch=16)
 abline(0,1)
 plot(out_flip_null_CLM_l0, out_flip_null_CLM_l1, main='LD=CLM', xlab='log likelihood under null', ylab='log likelihood under alternative')
 points(out_flip_null_CLM_l0[idx], out_flip_null_CLM_l1[idx], col='red', pch=16)
+abline(0,1)
+
+plot(out_flip_null_sample_l0mix, out_flip_null_sample_l1mix, main='LD=GBR', xlab='log mix likelihood under null', ylab='log mix likelihood under alternative')
+points(out_flip_null_sample_l0mix[idx], out_flip_null_sample_l1mix[idx], col='red', pch=16)
+abline(0,1)
+plot(out_flip_null_IBS_l0mix, out_flip_null_IBS_l1mix, main='LD=IBS', xlab='log mix likelihood under null', ylab='log mix likelihood under alternative')
+points(out_flip_null_IBS_l0mix[idx], out_flip_null_IBS_l1mix[idx], col='red', pch=16)
+abline(0,1)
+plot(out_flip_null_CLM_l0mix, out_flip_null_CLM_l1mix, main='LD=CLM', xlab='log mix likelihood under null', ylab='log mix likelihood under alternative')
+points(out_flip_null_CLM_l0mix[idx], out_flip_null_CLM_l1mix[idx], col='red', pch=16)
 abline(0,1)
 ```
 
@@ -585,20 +753,42 @@ abline(0,1)
 
 Comparing LR from Simulation 2.1 and 2.3,
 ```{r}
-par(mfrow=c(1,3))
+par(mfrow=c(2,3))
 plot(out_sample_lr, out_flip_null_sample_lr, ylim=c(-3000,500),
      xlab='logLR from Simu2.1',
      ylab='logLR from Simu2.3', main='LD=GBR')
 points(out_sample_lr[idx], out_flip_null_sample_lr[idx], col='red', pch=16)
 abline(0,1)
+abline(h=0,v=0,lty=4)
 plot(out_IBS_lr, out_flip_null_IBS_lr,
      xlab='logLR from Simu2.1',
      ylab='logLR from Simu2.3', main='LD=IBS')
 points(out_IBS_lr[idx], out_flip_null_IBS_lr[idx], col='red', pch=16)
 abline(0,1)
+abline(h=0,v=0,lty=4)
 plot(out_CLM_lr, out_flip_null_CLM_lr,
      xlab='logLR from Simu2.1',
      ylab='logLR from Simu2.3', main='LD=CLM')
 points(out_CLM_lr[idx], out_flip_null_CLM_lr[idx], col='red', pch=16)
 abline(0,1)
+abline(h=0,v=0,lty=4)
+
+plot(out_sample_lrmix, out_flip_null_sample_lrmix, 
+     xlab='logLRmix from Simu2.1',
+     ylab='logLRmix from Simu2.3', main='LD=GBR')
+points(out_sample_lrmix[idx], out_flip_null_sample_lrmix[idx], col='red', pch=16)
+abline(0,1)
+abline(h=0,v=0,lty=4)
+plot(out_IBS_lrmix, out_flip_null_IBS_lrmix,
+     xlab='logLRmix from Simu2.1',
+     ylab='logLRmix from Simu2.3', main='LD=IBS')
+points(out_IBS_lrmix[idx], out_flip_null_IBS_lrmix[idx], col='red', pch=16)
+abline(0,1)
+abline(h=0,v=0,lty=4)
+plot(out_CLM_lrmix, out_flip_null_CLM_lrmix,
+     xlab='logLRmix from Simu2.1',
+     ylab='logLRmix from Simu2.3', main='LD=CLM')
+points(out_CLM_lrmix[idx], out_flip_null_CLM_lrmix[idx], col='red', pch=16)
+abline(0,1)
+abline(h=0,v=0,lty=4)
 ```
