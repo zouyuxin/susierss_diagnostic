@@ -35,7 +35,7 @@ $$
 
 From the simulation, the standardized differences between observed z score and the conditional mean is longer-tailed than N(0,1). We use a mixture of normals to model the heavier tail empirically. We model the conditional distribution as
 $$
-\hat{z}_j | \hat{z}_{-j} \sim \sum_{k=1}^{K} \pi_k N(-\frac{1}{\Omega_{jj}} \Omega_{j,-j} \hat{z}_{-j},\frac{\sigma_k^2}{\Omega_{jj}}), \Omega = (\sigma^2 R + s^2 I)^{-1}.
+\hat{z}_j | \hat{z}_{-j} \sim \sum_{k=1}^{K} \pi_k N(-\frac{1}{\Omega_{jj}} \Omega_{j,-j} \hat{z}_{-j},\frac{\sigma_k^2}{\Omega_{jj}}).
 $$
 The $\sigma_k$ is a fixed dense grid, the minimum value is $0.8$, the maximum value is $2\sqrt{max(\text{standardized difference}^2)}$. We estimate $\pi_k$ using `mixsqp`. The likelihood ratio test is based on the mixture distribution.
 
@@ -125,8 +125,6 @@ out_null_IBS_lr = unlist(lapply(out_null_IBS$diagnostic.res1_simple, function(x)
 out_null_IBS_l0mix = unlist(lapply(out_null_IBS$diagnostic.res1_simple, function(x) x$post$logl0mix))
 out_null_IBS_l1mix = unlist(lapply(out_null_IBS$diagnostic.res1_simple, function(x) x$post$logl1mix))
 out_null_IBS_lrmix = unlist(lapply(out_null_IBS$diagnostic.res1_simple, function(x) x$post$logLRmix))
-out_null_IBS_l1mix[is.infinite(out_null_IBS_l1mix)] = -1000
-out_null_IBS_lrmix[is.infinite(out_null_IBS_lrmix)] = -1000
 
 zCLM = unlist(lapply(out_null_CLM$diagnostic.res1_simple, function(x) x$post$z))
 out_null_CLM_mean = unlist(lapply(out_null_CLM$diagnostic.res1_simple, function(x) x$post$postmean))
@@ -138,8 +136,6 @@ out_null_CLM_lr = unlist(lapply(out_null_CLM$diagnostic.res1_simple, function(x)
 out_null_CLM_l0mix = unlist(lapply(out_null_CLM$diagnostic.res1_simple, function(x) x$post$logl0mix))
 out_null_CLM_l1mix = unlist(lapply(out_null_CLM$diagnostic.res1_simple, function(x) x$post$logl1mix))
 out_null_CLM_lrmix = unlist(lapply(out_null_CLM$diagnostic.res1_simple, function(x) x$post$logLRmix))
-out_null_CLM_l1mix[is.infinite(out_null_CLM_l1mix)] = -1000
-out_null_CLM_lrmix[is.infinite(out_null_CLM_lrmix)] = -1000
 ```
 
 ```{r}
@@ -163,18 +159,21 @@ qqnorm(out_null_CLM_z, main='Standardized Difference LD=CLM')
 qqline(out_null_CLM_z)
 
 par(mfrow=c(2,3))
-plot(out_null_sample_l0, out_null_sample_l1, main='LD=GBR', xlab='log likelihood under null', ylab='log likelihood under alternative')
+plot(out_null_sample_l0, out_null_sample_l1, main='LD=GBR', xlab='log likelihood under null', ylab='log likelihood under alternative',
+     ylim = c(2*min(out_null_sample_l0), max(out_null_sample_l1)))
 abline(0,1)
-plot(out_null_IBS_l0, out_null_IBS_l1, main='LD=IBS', xlab='log likelihood under null', ylab='log likelihood under alternative')
+plot(out_null_IBS_l0, out_null_IBS_l1, main='LD=IBS', xlab='log likelihood under null', ylab='log likelihood under alternative',
+     ylim = c(2*min(out_null_IBS_l0), max(out_null_IBS_l1)))
 abline(0,1)
-plot(out_null_CLM_l0, out_null_CLM_l1, main='LD=CLM', xlab='log likelihood under null', ylab='log likelihood under alternative')
+plot(out_null_CLM_l0, out_null_CLM_l1, main='LD=CLM', xlab='log likelihood under null', ylab='log likelihood under alternative',
+     ylim = c(2*min(out_null_CLM_l0), max(out_null_CLM_l1)))
 abline(0,1)
 
-plot(out_null_sample_l0mix, out_null_sample_l1mix, main='LD=GBR', xlab='log mix likelihood under null', ylab='log mix likelihood under alternative')
+plot(out_null_sample_l0mix, out_null_sample_l1mix, main='Mixure model LD=GBR', xlab='log likelihood under null', ylab='log likelihood under alternative', ylim=c(2*min(out_null_sample_l0mix), max(out_null_sample_l1mix)))
 abline(0,1)
-plot(out_null_IBS_l0mix, out_null_IBS_l1mix, main='LD=IBS', xlab='log mix likelihood under null', ylab='log mix likelihood under alternative')
+plot(out_null_IBS_l0mix, out_null_IBS_l1mix, main='Mixure model LD=IBS', xlab='log likelihood under null', ylab='log likelihood under alternative', ylim = c(2*min(out_null_IBS_l0mix), max(out_null_IBS_l1mix)))
 abline(0,1)
-plot(out_null_CLM_l0mix, out_null_CLM_l1mix, main='LD=CLM', xlab='log mix likelihood under null', ylab='log mix likelihood under alternative')
+plot(out_null_CLM_l0mix, out_null_CLM_l1mix, main='Mixure model LD=CLM', xlab='log likelihood under null', ylab='log likelihood under alternative', ylim=c(2*min(out_null_CLM_l0mix), max(out_null_CLM_l1mix)))
 abline(0,1)
 ```
 
@@ -274,23 +273,23 @@ qqnorm(out_null_flip_CLM_z, ylab='Standardized Difference LD=CLM')
 qqline(out_null_flip_CLM_z)
 
 par(mfrow=c(2,3))
-plot(out_null_flip_sample_l0, out_null_flip_sample_l1, main='LD=GBR', xlab='log likelihood under null', ylab='log likelihood under alternative')
+plot(out_null_flip_sample_l0, out_null_flip_sample_l1, main='LD=GBR', xlab='log likelihood under null', ylab='log likelihood under alternative', ylim=c(2*min(out_null_flip_sample_l0), max(out_null_flip_sample_l1)))
 points(out_null_flip_sample_l0[idx], out_null_flip_sample_l1[idx], col='red', pch=16)
 abline(0,1)
-plot(out_null_flip_IBS_l0, out_null_flip_IBS_l1, main='LD=IBS', xlab='log likelihood under null', ylab='log likelihood under alternative')
+plot(out_null_flip_IBS_l0, out_null_flip_IBS_l1, main='LD=IBS', xlab='log likelihood under null', ylab='log likelihood under alternative', ylim=c(2*min(out_null_flip_IBS_l0), max(out_null_flip_IBS_l1)))
 points(out_null_flip_IBS_l0[idx], out_null_flip_IBS_l1[idx], col='red', pch=16)
 abline(0,1)
-plot(out_null_flip_CLM_l0, out_null_flip_CLM_l1, main='LD=CLM', xlab='log likelihood under null', ylab='log likelihood under alternative')
+plot(out_null_flip_CLM_l0, out_null_flip_CLM_l1, main='LD=CLM', xlab='log likelihood under null', ylab='log likelihood under alternative', ylim=c(2*min(out_null_flip_CLM_l0), max(out_null_flip_CLM_l1)))
 points(out_null_flip_CLM_l0[idx], out_null_flip_CLM_l1[idx], col='red', pch=16)
 abline(0,1)
 
-plot(out_null_flip_sample_l0mix, out_null_flip_sample_l1mix, main='LD=GBR', xlab='log mix likelihood under null', ylab='log mix likelihood under alternative')
+plot(out_null_flip_sample_l0mix, out_null_flip_sample_l1mix, main='Mixure model LD=GBR', xlab='log likelihood under null', ylab='log likelihood under alternative', ylim=c(2*min(out_null_flip_sample_l0mix), max(out_null_flip_sample_l1mix)))
 points(out_null_flip_sample_l0mix[idx], out_null_flip_sample_l1mix[idx], col='red', pch=16)
 abline(0,1)
-plot(out_null_flip_IBS_l0mix, out_null_flip_IBS_l1mix, main='LD=IBS', xlab='log mix likelihood under null', ylab='log mix likelihood under alternative')
+plot(out_null_flip_IBS_l0mix, out_null_flip_IBS_l1mix, main='Mixure model LD=IBS', xlab='log likelihood under null', ylab='log likelihood under alternative', ylim=c(2*min(out_null_flip_IBS_l0mix), max(out_null_flip_IBS_l1mix)))
 points(out_null_flip_IBS_l0mix[idx], out_null_flip_IBS_l1mix[idx], col='red', pch=16)
 abline(0,1)
-plot(out_null_flip_CLM_l0mix, out_null_flip_CLM_l1mix, main='LD=CLM', xlab='log mix likelihood under null', ylab='log mix likelihood under alternative')
+plot(out_null_flip_CLM_l0mix, out_null_flip_CLM_l1mix, main='Mixure model LD=CLM', xlab='log likelihood under null', ylab='log likelihood under alternative', ylim=c(2*min(out_null_flip_CLM_l0mix), max(out_null_flip_CLM_l1mix)))
 points(out_null_flip_CLM_l0mix[idx], out_null_flip_CLM_l1mix[idx], col='red', pch=16)
 abline(0,1)
 ```
@@ -318,7 +317,7 @@ abline(0,1)
 Comparing LR from Simulation 1.1 and 1.2,
 ```{r}
 par(mfrow=c(2,3))
-plot(out_null_sample_lr, out_null_flip_sample_lr, ylim=c(-3000,500),
+plot(out_null_sample_lr, out_null_flip_sample_lr, ylim=c(-1000,500), xlim=c(min(out_null_sample_lr), 100),
      xlab='logLR from Simu1.1',
      ylab='logLR from Simu1.2', main='LD=GBR')
 points(out_null_sample_lr[idx], out_null_flip_sample_lr[idx], col='red', pch=16)
@@ -326,32 +325,32 @@ abline(0,1)
 abline(h=0,v=0,lty=4)
 plot(out_null_IBS_lr, out_null_flip_IBS_lr,
      xlab='logLR from Simu1.1',
-     ylab='logLR from Simu1.2', main='LD=IBS')
+     ylab='logLR from Simu1.2', main='LD=IBS',xlim=c(min(out_null_IBS_lr), 100),ylim = c(-100, 100))
 points(out_null_IBS_lr[idx], out_null_flip_IBS_lr[idx], col='red', pch=16)
 abline(0,1)
 abline(h=0,v=0,lty=4)
 plot(out_null_CLM_lr, out_null_flip_CLM_lr,
      xlab='logLR from Simu1.1',
-     ylab='logLR from Simu1.2', main='LD=CLM')
+     ylab='logLR from Simu1.2', main='LD=CLM',xlim=c(min(out_null_CLM_lr), 100),ylim = c(-100, 100))
 points(out_null_CLM_lr[idx], out_null_flip_CLM_lr[idx], col='red', pch=16)
 abline(0,1)
 abline(h=0,v=0,lty=4)
 
 plot(out_null_sample_lrmix, out_null_flip_sample_lrmix,
      xlab='logLRmix from Simu1.1',
-     ylab='logLRmix from Simu1.2', main='LD=GBR')
+     ylab='logLRmix from Simu1.2', main='Mixure model LD=GBR', ylim=c(-100,20), xlim=c(min(out_null_sample_lrmix), 20))
 points(out_null_sample_lrmix[idx], out_null_flip_sample_lrmix[idx], col='red', pch=16)
 abline(0,1)
 abline(h=0,v=0,lty=4)
 plot(out_null_IBS_lrmix, out_null_flip_IBS_lrmix,
      xlab='logLRmix from Simu1.1',
-     ylab='logLRmix from Simu1.2', main='LD=IBS')
+     ylab='logLRmix from Simu1.2', main='Mixure model LD=IBS', ylim=c(-100,20), xlim=c(min(out_null_IBS_lrmix), 20))
 points(out_null_IBS_lrmix[idx], out_null_flip_IBS_lrmix[idx], col='red', pch=16)
 abline(0,1)
 abline(h=0,v=0,lty=4)
 plot(out_null_CLM_lrmix, out_null_flip_CLM_lrmix,
      xlab='logLRmix from Simu1.1',
-     ylab='logLRmix from Simu1.2', main='LD=CLM')
+     ylab='logLRmix from Simu1.2', main='Mixure model LD=CLM', ylim=c(-100,20), xlim=c(min(out_null_CLM_lrmix), 20))
 points(out_null_CLM_lrmix[idx], out_null_flip_CLM_lrmix[idx], col='red', pch=16)
 abline(0,1)
 abline(h=0,v=0,lty=4)
@@ -438,18 +437,21 @@ qqnorm(out_CLM_z, ylab='Standardized Difference LD=CLM')
 qqline(out_CLM_z)
 
 par(mfrow=c(2,3))
-plot(out_sample_l0, out_sample_l1, main='LD=GBR', xlab='log likelihood under null', ylab='log likelihood under alternative')
+plot(out_sample_l0, out_sample_l1, main='LD=GBR', xlab='log likelihood under null', ylab='log likelihood under alternative',
+     ylim=c(2*min(out_sample_l0), max(out_sample_l1)))
 abline(0,1)
-plot(out_IBS_l0, out_IBS_l1, main='LD=IBS', xlab='log likelihood under null', ylab='log likelihood under alternative')
+plot(out_IBS_l0, out_IBS_l1, main='LD=IBS', xlab='log likelihood under null', ylab='log likelihood under alternative',
+     ylim=c(2*min(out_IBS_l0), max(out_IBS_l1)))
 abline(0,1)
-plot(out_CLM_l0, out_CLM_l1, main='LD=CLM', xlab='log likelihood under null', ylab='log likelihood under alternative')
+plot(out_CLM_l0, out_CLM_l1, main='LD=CLM', xlab='log likelihood under null', ylab='log likelihood under alternative',
+     ylim=c(2*min(out_CLM_l0), max(out_CLM_l1)))
 abline(0,1)
 
-plot(out_sample_l0mix, out_sample_l1mix, main='LD=GBR', xlab='log mix likelihood under null', ylab='log mix likelihood under alternative')
+plot(out_sample_l0mix, out_sample_l1mix, main='Mixture model LD=GBR', xlab='log likelihood under null', ylab='log likelihood under alternative', ylim=c(2*min(out_sample_l0mix), max(out_sample_l1mix)))
 abline(0,1)
-plot(out_IBS_l0mix, out_IBS_l1mix, main='LD=IBS', xlab='log mix likelihood under null', ylab='log mix likelihood under alternative')
+plot(out_IBS_l0mix, out_IBS_l1mix, main='Mixture model LD=IBS', xlab='log likelihood under null', ylab='log likelihood under alternative', ylim=c(2*min(out_IBS_l0mix), max(out_IBS_l1mix)))
 abline(0,1)
-plot(out_CLM_l0mix, out_CLM_l1mix, main='LD=CLM', xlab='log mix likelihood under null', ylab='log mix likelihood under alternative')
+plot(out_CLM_l0mix, out_CLM_l1mix, main='Mixture model LD=CLM', xlab='log likelihood under null', ylab='log likelihood under alternative', ylim=c(2*min(out_CLM_l0mix), max(out_CLM_l1mix)))
 abline(0,1)
 ```
 
@@ -539,23 +541,26 @@ qqnorm(out_flip_CLM_z, ylab='Standardized Difference LD=CLM')
 qqline(out_flip_CLM_z)
 
 par(mfrow=c(2,3))
-plot(out_flip_sample_l0, out_flip_sample_l1, main='LD=GBR', xlab='log likelihood under null', ylab='log likelihood under alternative')
+plot(out_flip_sample_l0, out_flip_sample_l1, main='LD=GBR', xlab='log likelihood under null', ylab='log likelihood under alternative',
+     ylim=c(2*min(out_flip_sample_l0), max(out_flip_sample_l1)))
 points(out_flip_sample_l0[idx], out_flip_sample_l1[idx], col='red', pch=16)
 abline(0,1)
-plot(out_flip_IBS_l0, out_flip_IBS_l1, main='LD=IBS', xlab='log likelihood under null', ylab='log likelihood under alternative')
+plot(out_flip_IBS_l0, out_flip_IBS_l1, main='LD=IBS', xlab='log likelihood under null', ylab='log likelihood under alternative',
+     ylim=c(2*min(out_flip_IBS_l0), max(out_flip_IBS_l1)))
 points(out_flip_IBS_l0[idx], out_flip_IBS_l1[idx], col='red', pch=16)
 abline(0,1)
-plot(out_flip_CLM_l0, out_flip_CLM_l1, main='LD=CLM', xlab='log likelihood under null', ylab='log likelihood under alternative')
+plot(out_flip_CLM_l0, out_flip_CLM_l1, main='LD=CLM', xlab='log likelihood under null', ylab='log likelihood under alternative',
+     ylim=c(2*min(out_flip_CLM_l0), max(out_flip_CLM_l1)))
 points(out_flip_CLM_l0[idx], out_flip_CLM_l1[idx], col='red', pch=16)
 abline(0,1)
 
-plot(out_flip_sample_l0mix, out_flip_sample_l1mix, main='LD=GBR', xlab='log mix likelihood under null', ylab='log mix likelihood under alternative')
+plot(out_flip_sample_l0mix, out_flip_sample_l1mix, main='Mixture model LD=GBR', xlab='log likelihood under null', ylab='log likelihood under alternative', ylim=c(2*min(out_flip_sample_l0mix), max(out_flip_sample_l1mix)))
 points(out_flip_sample_l0mix[idx], out_flip_sample_l1mix[idx], col='red', pch=16)
 abline(0,1)
-plot(out_flip_IBS_l0mix, out_flip_IBS_l1mix, main='LD=IBS', xlab='log mix likelihood under null', ylab='log mix likelihood under alternative')
+plot(out_flip_IBS_l0mix, out_flip_IBS_l1mix, main='Mixture model LD=IBS', xlab='log likelihood under null', ylab='log likelihood under alternative', ylim=c(2*min(out_flip_IBS_l0mix), max(out_flip_IBS_l1mix)))
 points(out_flip_IBS_l0mix[idx], out_flip_IBS_l1mix[idx], col='red', pch=16)
 abline(0,1)
-plot(out_flip_CLM_l0mix, out_flip_CLM_l1mix, main='LD=CLM', xlab='log mix likelihood under null', ylab='log mix likelihood under alternative')
+plot(out_flip_CLM_l0mix, out_flip_CLM_l1mix, main='Mixture model LD=CLM', xlab='log likelihood under null', ylab='log likelihood under alternative', ylim=c(2*min(out_flip_CLM_l0mix), max(out_flip_CLM_l1mix)))
 points(out_flip_CLM_l0mix[idx], out_flip_CLM_l1mix[idx], col='red', pch=16)
 abline(0,1)
 ```
@@ -583,7 +588,7 @@ abline(0,1)
 Comparing LR from Simulation 2.1 and 2.2,
 ```{r}
 par(mfrow=c(2,3))
-plot(out_sample_lr, out_flip_sample_lr, ylim=c(-3000,500),
+plot(out_sample_lr, out_flip_sample_lr, ylim=c(-1000,500), xlim = c(min(out_sample_lr), 200), 
      xlab='logLR from Simu2.1',
      ylab='logLR from Simu2.2', main='LD=GBR')
 points(out_sample_lr[idx], out_flip_sample_lr[idx], col='red', pch=16)
@@ -591,30 +596,30 @@ abline(0,1)
 abline(h=0, v=0, lty=4)
 plot(out_IBS_lr, out_flip_IBS_lr,
      xlab='logLR from Simu2.1',
-     ylab='logLR from Simu2.2', main='LD=IBS')
+     ylab='logLR from Simu2.2', main='LD=IBS', xlim = c(min(out_IBS_lr), 100), ylim=c(-100,200))
 points(out_IBS_lr[idx], out_flip_IBS_lr[idx], col='red', pch=16)
 abline(0,1)
 abline(h=0, v=0, lty=4)
 plot(out_CLM_lr, out_flip_CLM_lr,
      xlab='logLR from Simu2.1',
-     ylab='logLR from Simu2.2', main='LD=CLM')
+     ylab='logLR from Simu2.2', main='LD=CLM', xlim = c(min(out_CLM_lr), 100), ylim=c(-100,200))
 points(out_CLM_lr[idx], out_flip_CLM_lr[idx], col='red', pch=16)
 abline(0,1)
 abline(h=0, v=0, lty=4)
 
-plot(out_sample_lrmix, out_flip_sample_lrmix,
+plot(out_sample_lrmix, out_flip_sample_lrmix, xlim=c(min(out_sample_lrmix),10), ylim=c(-50,20),
      xlab='logLRmix from Simu2.1',
      ylab='logLRmix from Simu2.2', main='LD=GBR')
 points(out_sample_lrmix[idx], out_flip_sample_lrmix[idx], col='red', pch=16)
 abline(0,1)
 abline(h=0, v=0, lty=4)
-plot(out_IBS_lrmix, out_flip_IBS_lrmix,
+plot(out_IBS_lrmix, out_flip_IBS_lrmix,xlim=c(min(out_IBS_lrmix),10), ylim=c(-50,20),
      xlab='logLRmix from Simu2.1',
      ylab='logLRmix from Simu2.2', main='LD=IBS')
 points(out_IBS_lrmix[idx], out_flip_IBS_lrmix[idx], col='red', pch=16)
 abline(0,1)
 abline(h=0, v=0, lty=4)
-plot(out_CLM_lrmix, out_flip_CLM_lrmix,
+plot(out_CLM_lrmix, out_flip_CLM_lrmix,xlim=c(min(out_CLM_lrmix),10), ylim=c(-50,20),
      xlab='logLRmix from Simu2.1',
      ylab='logLRmix from Simu2.2', main='LD=CLM')
 points(out_CLM_lrmix[idx], out_flip_CLM_lrmix[idx], col='red', pch=16)
@@ -710,23 +715,23 @@ qqnorm(out_flip_null_CLM_z, xlab='Standardized Difference LD=CLM')
 qqline(out_flip_null_CLM_z)
 
 par(mfrow=c(2,3))
-plot(out_flip_null_sample_l0, out_flip_null_sample_l1, main='LD=GBR', xlab='log likelihood under null', ylab='log likelihood under alternative')
+plot(out_flip_null_sample_l0, out_flip_null_sample_l1, main='LD=GBR', xlab='log likelihood under null', ylab='log likelihood under alternative', ylim = c(2*min(out_flip_null_sample_l0), max(out_flip_null_sample_l1)))
 points(out_flip_null_sample_l0[idx], out_flip_null_sample_l1[idx], col='red', pch=16)
 abline(0,1)
-plot(out_flip_null_IBS_l0, out_flip_null_IBS_l1, main='LD=IBS', xlab='log likelihood under null', ylab='log likelihood under alternative')
+plot(out_flip_null_IBS_l0, out_flip_null_IBS_l1, main='LD=IBS', xlab='log likelihood under null', ylab='log likelihood under alternative', ylim=c(2*min(out_flip_null_IBS_l0), max(out_flip_null_IBS_l1)))
 points(out_flip_null_IBS_l0[idx], out_flip_null_IBS_l1[idx], col='red', pch=16)
 abline(0,1)
-plot(out_flip_null_CLM_l0, out_flip_null_CLM_l1, main='LD=CLM', xlab='log likelihood under null', ylab='log likelihood under alternative')
+plot(out_flip_null_CLM_l0, out_flip_null_CLM_l1, main='LD=CLM', xlab='log likelihood under null', ylab='log likelihood under alternative', ylim=c(2*min(out_flip_null_CLM_l0), max(out_flip_null_CLM_l1)))
 points(out_flip_null_CLM_l0[idx], out_flip_null_CLM_l1[idx], col='red', pch=16)
 abline(0,1)
 
-plot(out_flip_null_sample_l0mix, out_flip_null_sample_l1mix, main='LD=GBR', xlab='log mix likelihood under null', ylab='log mix likelihood under alternative')
+plot(out_flip_null_sample_l0mix, out_flip_null_sample_l1mix, main='Mixture model LD=GBR', xlab='log likelihood under null', ylab='log likelihood under alternative', ylim=c(2*min(out_flip_null_sample_l0mix), max(out_flip_null_sample_l1mix)))
 points(out_flip_null_sample_l0mix[idx], out_flip_null_sample_l1mix[idx], col='red', pch=16)
 abline(0,1)
-plot(out_flip_null_IBS_l0mix, out_flip_null_IBS_l1mix, main='LD=IBS', xlab='log mix likelihood under null', ylab='log mix likelihood under alternative')
+plot(out_flip_null_IBS_l0mix, out_flip_null_IBS_l1mix, main='Mixture model LD=IBS', xlab='log likelihood under null', ylab='log likelihood under alternative', ylim=c(2*min(out_flip_null_IBS_l0mix), max(out_flip_null_IBS_l1mix)))
 points(out_flip_null_IBS_l0mix[idx], out_flip_null_IBS_l1mix[idx], col='red', pch=16)
 abline(0,1)
-plot(out_flip_null_CLM_l0mix, out_flip_null_CLM_l1mix, main='LD=CLM', xlab='log mix likelihood under null', ylab='log mix likelihood under alternative')
+plot(out_flip_null_CLM_l0mix, out_flip_null_CLM_l1mix, main='Mixture model LD=CLM', xlab='log likelihood under null', ylab='log likelihood under alternative', ylim=c(2*min(out_flip_null_CLM_l0mix), max(out_flip_null_CLM_l1mix)))
 points(out_flip_null_CLM_l0mix[idx], out_flip_null_CLM_l1mix[idx], col='red', pch=16)
 abline(0,1)
 ```
@@ -754,38 +759,38 @@ abline(0,1)
 Comparing LR from Simulation 2.1 and 2.3,
 ```{r}
 par(mfrow=c(2,3))
-plot(out_sample_lr, out_flip_null_sample_lr, ylim=c(-3000,500),
+plot(out_sample_lr, out_flip_null_sample_lr, ylim=c(-1000,500), xlim = c(min(out_sample_lr), 10),
      xlab='logLR from Simu2.1',
      ylab='logLR from Simu2.3', main='LD=GBR')
 points(out_sample_lr[idx], out_flip_null_sample_lr[idx], col='red', pch=16)
 abline(0,1)
 abline(h=0,v=0,lty=4)
-plot(out_IBS_lr, out_flip_null_IBS_lr,
+plot(out_IBS_lr, out_flip_null_IBS_lr,ylim=c(-100,100), xlim = c(min(out_IBS_lr), 30),
      xlab='logLR from Simu2.1',
      ylab='logLR from Simu2.3', main='LD=IBS')
 points(out_IBS_lr[idx], out_flip_null_IBS_lr[idx], col='red', pch=16)
 abline(0,1)
 abline(h=0,v=0,lty=4)
-plot(out_CLM_lr, out_flip_null_CLM_lr,
+plot(out_CLM_lr, out_flip_null_CLM_lr,ylim=c(-100,100), xlim = c(min(out_CLM_lr), 30),
      xlab='logLR from Simu2.1',
      ylab='logLR from Simu2.3', main='LD=CLM')
 points(out_CLM_lr[idx], out_flip_null_CLM_lr[idx], col='red', pch=16)
 abline(0,1)
 abline(h=0,v=0,lty=4)
 
-plot(out_sample_lrmix, out_flip_null_sample_lrmix, 
+plot(out_sample_lrmix, out_flip_null_sample_lrmix, xlim=c(min(out_sample_lrmix),10), ylim=c(-100,10),
      xlab='logLRmix from Simu2.1',
      ylab='logLRmix from Simu2.3', main='LD=GBR')
 points(out_sample_lrmix[idx], out_flip_null_sample_lrmix[idx], col='red', pch=16)
 abline(0,1)
 abline(h=0,v=0,lty=4)
-plot(out_IBS_lrmix, out_flip_null_IBS_lrmix,
+plot(out_IBS_lrmix, out_flip_null_IBS_lrmix,xlim=c(min(out_IBS_lrmix),10), ylim=c(-100,10),
      xlab='logLRmix from Simu2.1',
      ylab='logLRmix from Simu2.3', main='LD=IBS')
 points(out_IBS_lrmix[idx], out_flip_null_IBS_lrmix[idx], col='red', pch=16)
 abline(0,1)
 abline(h=0,v=0,lty=4)
-plot(out_CLM_lrmix, out_flip_null_CLM_lrmix,
+plot(out_CLM_lrmix, out_flip_null_CLM_lrmix,xlim=c(min(out_CLM_lrmix),10), ylim=c(-100,10),
      xlab='logLRmix from Simu2.1',
      ylab='logLRmix from Simu2.3', main='LD=CLM')
 points(out_CLM_lrmix[idx], out_flip_null_CLM_lrmix[idx], col='red', pch=16)
