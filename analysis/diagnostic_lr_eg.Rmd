@@ -1,0 +1,98 @@
+---
+title: "SuSiE RSS Diagnostic Example"
+author: "Yuxin Zou"
+date: "2/16/2021"
+output: 
+  workflowr::wflow_html:
+    code_folding: hide
+---
+
+Under the null, the posterior distribution of $\hat{z}_j | \hat{z}_{-j}$ is:
+$$
+\hat{z}_j | \hat{z}_{-j} \sim N(-\frac{1}{\Omega_{jj}} \Omega_{j,-j} \hat{z}_{-j},1/\Omega_{jj}), \Omega = (\sigma^2 R + s^2 I)^{-1}.
+$$
+
+To check whether there is an allele switch issue, we test the hypothesis $H_0:$ the sign of $\hat{z}_j$ is correct, vs $H_1:$ the sign of $\hat{z}_j$ is flipped. The likelihood ratio is
+$$
+LR = \frac{p(-\hat{z}_j | \hat{z}_{-j})}{p(\hat{z}_j | \hat{z}_{-j})}
+$$
+
+From the simulation, the standardized differences between observed z score and the conditional mean is longer-tailed than N(0,1). We use a mixture of normals to model the heavier tail empirically. We model the conditional distribution as
+$$
+\hat{z}_j | \hat{z}_{-j} \sim \sum_{k=1}^{K} \pi_k N(-\frac{1}{\Omega_{jj}} \Omega_{j,-j} \hat{z}_{-j},\frac{\sigma_k^2}{\Omega_{jj}}).
+$$
+The $\sigma_k$ is a fixed dense grid, the minimum value is $0.8$, the maximum value is $2\sqrt{max(\text{standardized difference}^2)}$. We estimate $\pi_k$ using `mixsqp`. The likelihood ratio test is based on the mixture distribution.
+
+
+```{r}
+dat = readRDS('output/rss_diagnostic/data/data_24.rds')
+z = readRDS('output/rss_diagnostic/flip_z/data_24_sim_gaussian_1_get_sumstats_1_flip_z_1.rds')$z
+res.GBR = readRDS('output/rss_diagnostic/diagnostic/data_24_sim_gaussian_null_1_get_sumstats_1_flip_z_1_susie_rss_1_diagnostic_1.rds')$res1_simple
+res.CLM = readRDS('output/rss_diagnostic/diagnostic/data_24_sim_gaussian_null_1_get_sumstats_1_flip_z_1_susie_rss_3_diagnostic_1.rds')$res1_simple
+ld.CLM = dat$ld[['CLM']]
+ld.GBR = dat$ld[['sample']]
+
+postmean.GBR = res.GBR$post$postmean
+postz.GBR = res.GBR$post$post_z
+loglrmix.GBR = as.numeric(res.GBR$post$logLRmix)
+
+postmean.CLM = res.CLM$post$postmean
+postz.CLM = res.CLM$post$post_z
+logl0.CLM = res.CLM$post$logl0
+logl1.CLM = res.CLM$post$logl1
+loglr.CLM = res.CLM$post$logLR
+
+logl0mix.CLM = as.numeric(res.CLM$post$logl0mix)
+logl1mix.CLM = as.numeric(res.CLM$post$logl1mix)
+loglrmix.CLM = as.numeric(res.CLM$post$logLRmix)
+```
+
+There are 595 SNPs in this region. The data is simulated under null. The red point (id: 386) in the plot has large LR from the diagnostic.
+```{r}
+plot(z, pch=20)
+points(386, z[386], col='red', pch=20)
+```
+
+The estimated $s^2$ using CLM LD is `r res.CLM$s2`.
+
+The QQ plot for the standardized difference:
+```{r}
+qqnorm(postz.CLM)
+qqline(postz.CLM)
+```
+```{r}
+a_min = 0.8
+if(max(postz.CLM^2) < 1){
+  a_max = 2
+}else{
+  a_max = 2*sqrt(max(postz.CLM^2))
+}
+npoint = ceiling(log2(a_max/a_min)/log2(1.05))
+a_grid = 1.05^((-npoint):0) * a_max
+gd = cbind(res.CLM$post$w[res.CLM$post$w>0], a_grid[res.CLM$post$w>0])
+colnames(gd) = c('pi_k', 'sigma_k')
+gd
+```
+
+The log LR for SNP 386 using mixture model is `r loglrmix.CLM[386]`. 
+
+```{r}
+data.frame(observed_z = z[386], conditional_mean_CLM=postmean.CLM[386], conditional_mean_GBR = postmean.GBR[386])
+```
+The conditional mean from CLM is positive. We check the LD matrix.
+
+```{r}
+plot(ld.GBR[386,-386], ld.CLM[386,-386], pch=20, xlab='GBR', ylab='CLM', main='correlations with SNP 386')
+abline(v=0,h=0,lty=4)
+```
+
+
+
+
+
+
+
+
+
+
+
