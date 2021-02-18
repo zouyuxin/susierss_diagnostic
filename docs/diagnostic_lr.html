@@ -427,7 +427,7 @@ div.tocify {
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2021-02-16
+<strong>Last updated:</strong> 2021-02-17
 </p>
 <p>
 <strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
@@ -518,16 +518,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomzouyuxinsusierssdiagnostictree229d19a2212588948ebc4e39b44623b35fff4365targetblank229d19aa"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/zouyuxin/susierss_diagnostic/tree/229d19a2212588948ebc4e39b44623b35fff4365" target="_blank">229d19a</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomzouyuxinsusierssdiagnostictree74fd9995e3742bb29ab81896f6f5f8bf832aae4atargetblank74fd999a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/zouyuxin/susierss_diagnostic/tree/74fd9995e3742bb29ab81896f6f5f8bf832aae4a" target="_blank">74fd999</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomzouyuxinsusierssdiagnostictree229d19a2212588948ebc4e39b44623b35fff4365targetblank229d19aa" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomzouyuxinsusierssdiagnostictree74fd9995e3742bb29ab81896f6f5f8bf832aae4atargetblank74fd999a" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/zouyuxin/susierss_diagnostic/tree/229d19a2212588948ebc4e39b44623b35fff4365" target="_blank">229d19a</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/zouyuxin/susierss_diagnostic/tree/74fd9995e3742bb29ab81896f6f5f8bf832aae4a" target="_blank">74fd999</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -578,6 +578,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/zouyuxin/susierss_diagnostic/blob/74fd9995e3742bb29ab81896f6f5f8bf832aae4a/analysis/diagnostic_lr.Rmd" target="_blank">74fd999</a>
+</td>
+<td>
+zouyuxin
+</td>
+<td>
+2021-02-17
+</td>
+<td>
+wflow_publish(“analysis/diagnostic_lr.Rmd”)
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/zouyuxin/susierss_diagnostic/7e973c25826f739f64f47057fcb04a741c57d9b0/docs/diagnostic_lr.html" target="_blank">7e973c2</a>
+</td>
+<td>
+zouyuxin
+</td>
+<td>
+2021-02-16
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -687,7 +721,7 @@ U_2^T \hat{z} \sim N(0, s^2 I_{p_2}).
 LR = \frac{p(-\hat{z}_j | \hat{z}_{-j})}{p(\hat{z}_j | \hat{z}_{-j})}
 \]</span></p>
 <p>From the simulation, the standardized differences between observed z score and the conditional mean is longer-tailed than N(0,1). We use a mixture of normals to model the heavier tail empirically. We model the conditional distribution as <span class="math display">\[
-\hat{z}_j | \hat{z}_{-j} \sim \sum_{k=1}^{K} \pi_k N(-\frac{1}{\Omega_{jj}} \Omega_{j,-j} \hat{z}_{-j},\frac{\sigma_k^2}{\Omega_{jj}}), \Omega = (\sigma^2 R + s^2 I)^{-1}.
+\hat{z}_j | \hat{z}_{-j} \sim \sum_{k=1}^{K} \pi_k N(-\frac{1}{\Omega_{jj}} \Omega_{j,-j} \hat{z}_{-j},\frac{\sigma_k^2}{\Omega_{jj}}).
 \]</span> The <span class="math inline">\(\sigma_k\)</span> is a fixed dense grid, the minimum value is <span class="math inline">\(0.8\)</span>, the maximum value is <span class="math inline">\(2\sqrt{max(\text{standardized difference}^2)}\)</span>. We estimate <span class="math inline">\(\pi_k\)</span> using <code>mixsqp</code>. The likelihood ratio test is based on the mixture distribution.</p>
 <p><strong>Simulation Setting</strong></p>
 <p>In the following simulation, we extract 200 regions from 1000 Genome data using GBR (British in England and Scotland), IBS (Iberian Populations in Spain) and CLM (Colombians in Medellin, Colombia) population. We got 1000 Genome genotypes from <a href="ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/supporting/hd_genotype_chip" class="uri">ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/supporting/hd_genotype_chip</a>, ALL.chip.omni_broad_sanger_combined.20140818.snps.genotypes.vcf.gz. The VCF file is converted to bed format using plink. We removed related samples. There are 103 GBR samples, 150 IBS samples and 107 CLM samples. We generated z scores based on GBR samples and we want to detect the inconsistency between z scores and LD (from GBR, IBS or CLM).</p>
@@ -794,8 +828,6 @@ out_null_IBS_lr = unlist(lapply(out_null_IBS$diagnostic.res1_simple, function(x)
 out_null_IBS_l0mix = unlist(lapply(out_null_IBS$diagnostic.res1_simple, function(x) x$post$logl0mix))
 out_null_IBS_l1mix = unlist(lapply(out_null_IBS$diagnostic.res1_simple, function(x) x$post$logl1mix))
 out_null_IBS_lrmix = unlist(lapply(out_null_IBS$diagnostic.res1_simple, function(x) x$post$logLRmix))
-out_null_IBS_l1mix[is.infinite(out_null_IBS_l1mix)] = -1000
-out_null_IBS_lrmix[is.infinite(out_null_IBS_lrmix)] = -1000
 
 zCLM = unlist(lapply(out_null_CLM$diagnostic.res1_simple, function(x) x$post$z))
 out_null_CLM_mean = unlist(lapply(out_null_CLM$diagnostic.res1_simple, function(x) x$post$postmean))
@@ -806,9 +838,7 @@ out_null_CLM_l1 = unlist(lapply(out_null_CLM$diagnostic.res1_simple, function(x)
 out_null_CLM_lr = unlist(lapply(out_null_CLM$diagnostic.res1_simple, function(x) x$post$logLR))
 out_null_CLM_l0mix = unlist(lapply(out_null_CLM$diagnostic.res1_simple, function(x) x$post$logl0mix))
 out_null_CLM_l1mix = unlist(lapply(out_null_CLM$diagnostic.res1_simple, function(x) x$post$logl1mix))
-out_null_CLM_lrmix = unlist(lapply(out_null_CLM$diagnostic.res1_simple, function(x) x$post$logLRmix))
-out_null_CLM_l1mix[is.infinite(out_null_CLM_l1mix)] = -1000
-out_null_CLM_lrmix[is.infinite(out_null_CLM_lrmix)] = -1000</code></pre>
+out_null_CLM_lrmix = unlist(lapply(out_null_CLM$diagnostic.res1_simple, function(x) x$post$logLRmix))</code></pre>
 <pre class="r"><code>par(mfrow=c(3,3))
 diff_sample = z-out_null_sample_mean; diff_IBS = z-out_null_IBS_mean; diff_CLM = z-out_null_CLM_mean; 
 ymax = ceiling(max(c(diff_sample, diff_IBS, diff_CLM))); ymin = floor(min(c(diff_sample, diff_IBS, diff_CLM)))
@@ -852,6 +882,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/zouyuxin/susierss_diagnostic/blob/7e973c25826f739f64f47057fcb04a741c57d9b0/docs/figure/diagnostic_lr.Rmd/unnamed-chunk-7-1.png" target="_blank">7e973c2</a>
+</td>
+<td>
+zouyuxin
+</td>
+<td>
+2021-02-16
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/zouyuxin/susierss_diagnostic/blob/26f87300a7b99b89124cb6b5a59a9f82553e1705/docs/figure/diagnostic_lr.Rmd/unnamed-chunk-7-1.png" target="_blank">26f8730</a>
 </td>
 <td>
@@ -866,18 +907,21 @@ zouyuxin
 </div>
 </div>
 <pre class="r"><code>par(mfrow=c(2,3))
-plot(out_null_sample_l0, out_null_sample_l1, main=&#39;LD=GBR&#39;, xlab=&#39;log likelihood under null&#39;, ylab=&#39;log likelihood under alternative&#39;)
+plot(out_null_sample_l0, out_null_sample_l1, main=&#39;LD=GBR&#39;, xlab=&#39;log likelihood under null&#39;, ylab=&#39;log likelihood under alternative&#39;,
+     ylim = c(2*min(out_null_sample_l0), max(out_null_sample_l1)))
 abline(0,1)
-plot(out_null_IBS_l0, out_null_IBS_l1, main=&#39;LD=IBS&#39;, xlab=&#39;log likelihood under null&#39;, ylab=&#39;log likelihood under alternative&#39;)
+plot(out_null_IBS_l0, out_null_IBS_l1, main=&#39;LD=IBS&#39;, xlab=&#39;log likelihood under null&#39;, ylab=&#39;log likelihood under alternative&#39;,
+     ylim = c(2*min(out_null_IBS_l0), max(out_null_IBS_l1)))
 abline(0,1)
-plot(out_null_CLM_l0, out_null_CLM_l1, main=&#39;LD=CLM&#39;, xlab=&#39;log likelihood under null&#39;, ylab=&#39;log likelihood under alternative&#39;)
+plot(out_null_CLM_l0, out_null_CLM_l1, main=&#39;LD=CLM&#39;, xlab=&#39;log likelihood under null&#39;, ylab=&#39;log likelihood under alternative&#39;,
+     ylim = c(2*min(out_null_CLM_l0), max(out_null_CLM_l1)))
 abline(0,1)
 
-plot(out_null_sample_l0mix, out_null_sample_l1mix, main=&#39;LD=GBR&#39;, xlab=&#39;log mix likelihood under null&#39;, ylab=&#39;log mix likelihood under alternative&#39;)
+plot(out_null_sample_l0mix, out_null_sample_l1mix, main=&#39;Mixure model LD=GBR&#39;, xlab=&#39;log likelihood under null&#39;, ylab=&#39;log likelihood under alternative&#39;, ylim=c(2*min(out_null_sample_l0mix), max(out_null_sample_l1mix)))
 abline(0,1)
-plot(out_null_IBS_l0mix, out_null_IBS_l1mix, main=&#39;LD=IBS&#39;, xlab=&#39;log mix likelihood under null&#39;, ylab=&#39;log mix likelihood under alternative&#39;)
+plot(out_null_IBS_l0mix, out_null_IBS_l1mix, main=&#39;Mixure model LD=IBS&#39;, xlab=&#39;log likelihood under null&#39;, ylab=&#39;log likelihood under alternative&#39;, ylim = c(2*min(out_null_IBS_l0mix), max(out_null_IBS_l1mix)))
 abline(0,1)
-plot(out_null_CLM_l0mix, out_null_CLM_l1mix, main=&#39;LD=CLM&#39;, xlab=&#39;log mix likelihood under null&#39;, ylab=&#39;log mix likelihood under alternative&#39;)
+plot(out_null_CLM_l0mix, out_null_CLM_l1mix, main=&#39;Mixure model LD=CLM&#39;, xlab=&#39;log likelihood under null&#39;, ylab=&#39;log likelihood under alternative&#39;, ylim=c(2*min(out_null_CLM_l0mix), max(out_null_CLM_l1mix)))
 abline(0,1)</code></pre>
 <p><img src="figure/diagnostic_lr.Rmd/unnamed-chunk-7-2.png" width="672" style="display: block; margin: auto;" /></p>
 <p>
@@ -902,6 +946,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/zouyuxin/susierss_diagnostic/blob/7e973c25826f739f64f47057fcb04a741c57d9b0/docs/figure/diagnostic_lr.Rmd/unnamed-chunk-7-2.png" target="_blank">7e973c2</a>
+</td>
+<td>
+zouyuxin
+</td>
+<td>
+2021-02-16
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/zouyuxin/susierss_diagnostic/blob/26f87300a7b99b89124cb6b5a59a9f82553e1705/docs/figure/diagnostic_lr.Rmd/unnamed-chunk-7-2.png" target="_blank">26f8730</a>
@@ -1100,6 +1155,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/zouyuxin/susierss_diagnostic/blob/7e973c25826f739f64f47057fcb04a741c57d9b0/docs/figure/diagnostic_lr.Rmd/unnamed-chunk-12-1.png" target="_blank">7e973c2</a>
+</td>
+<td>
+zouyuxin
+</td>
+<td>
+2021-02-16
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/zouyuxin/susierss_diagnostic/blob/26f87300a7b99b89124cb6b5a59a9f82553e1705/docs/figure/diagnostic_lr.Rmd/unnamed-chunk-12-1.png" target="_blank">26f8730</a>
 </td>
 <td>
@@ -1114,23 +1180,23 @@ zouyuxin
 </div>
 </div>
 <pre class="r"><code>par(mfrow=c(2,3))
-plot(out_null_flip_sample_l0, out_null_flip_sample_l1, main=&#39;LD=GBR&#39;, xlab=&#39;log likelihood under null&#39;, ylab=&#39;log likelihood under alternative&#39;)
+plot(out_null_flip_sample_l0, out_null_flip_sample_l1, main=&#39;LD=GBR&#39;, xlab=&#39;log likelihood under null&#39;, ylab=&#39;log likelihood under alternative&#39;, ylim=c(2*min(out_null_flip_sample_l0), max(out_null_flip_sample_l1)))
 points(out_null_flip_sample_l0[idx], out_null_flip_sample_l1[idx], col=&#39;red&#39;, pch=16)
 abline(0,1)
-plot(out_null_flip_IBS_l0, out_null_flip_IBS_l1, main=&#39;LD=IBS&#39;, xlab=&#39;log likelihood under null&#39;, ylab=&#39;log likelihood under alternative&#39;)
+plot(out_null_flip_IBS_l0, out_null_flip_IBS_l1, main=&#39;LD=IBS&#39;, xlab=&#39;log likelihood under null&#39;, ylab=&#39;log likelihood under alternative&#39;, ylim=c(2*min(out_null_flip_IBS_l0), max(out_null_flip_IBS_l1)))
 points(out_null_flip_IBS_l0[idx], out_null_flip_IBS_l1[idx], col=&#39;red&#39;, pch=16)
 abline(0,1)
-plot(out_null_flip_CLM_l0, out_null_flip_CLM_l1, main=&#39;LD=CLM&#39;, xlab=&#39;log likelihood under null&#39;, ylab=&#39;log likelihood under alternative&#39;)
+plot(out_null_flip_CLM_l0, out_null_flip_CLM_l1, main=&#39;LD=CLM&#39;, xlab=&#39;log likelihood under null&#39;, ylab=&#39;log likelihood under alternative&#39;, ylim=c(2*min(out_null_flip_CLM_l0), max(out_null_flip_CLM_l1)))
 points(out_null_flip_CLM_l0[idx], out_null_flip_CLM_l1[idx], col=&#39;red&#39;, pch=16)
 abline(0,1)
 
-plot(out_null_flip_sample_l0mix, out_null_flip_sample_l1mix, main=&#39;LD=GBR&#39;, xlab=&#39;log mix likelihood under null&#39;, ylab=&#39;log mix likelihood under alternative&#39;)
+plot(out_null_flip_sample_l0mix, out_null_flip_sample_l1mix, main=&#39;Mixure model LD=GBR&#39;, xlab=&#39;log likelihood under null&#39;, ylab=&#39;log likelihood under alternative&#39;, ylim=c(2*min(out_null_flip_sample_l0mix), max(out_null_flip_sample_l1mix)))
 points(out_null_flip_sample_l0mix[idx], out_null_flip_sample_l1mix[idx], col=&#39;red&#39;, pch=16)
 abline(0,1)
-plot(out_null_flip_IBS_l0mix, out_null_flip_IBS_l1mix, main=&#39;LD=IBS&#39;, xlab=&#39;log mix likelihood under null&#39;, ylab=&#39;log mix likelihood under alternative&#39;)
+plot(out_null_flip_IBS_l0mix, out_null_flip_IBS_l1mix, main=&#39;Mixure model LD=IBS&#39;, xlab=&#39;log likelihood under null&#39;, ylab=&#39;log likelihood under alternative&#39;, ylim=c(2*min(out_null_flip_IBS_l0mix), max(out_null_flip_IBS_l1mix)))
 points(out_null_flip_IBS_l0mix[idx], out_null_flip_IBS_l1mix[idx], col=&#39;red&#39;, pch=16)
 abline(0,1)
-plot(out_null_flip_CLM_l0mix, out_null_flip_CLM_l1mix, main=&#39;LD=CLM&#39;, xlab=&#39;log mix likelihood under null&#39;, ylab=&#39;log mix likelihood under alternative&#39;)
+plot(out_null_flip_CLM_l0mix, out_null_flip_CLM_l1mix, main=&#39;Mixure model LD=CLM&#39;, xlab=&#39;log likelihood under null&#39;, ylab=&#39;log likelihood under alternative&#39;, ylim=c(2*min(out_null_flip_CLM_l0mix), max(out_null_flip_CLM_l1mix)))
 points(out_null_flip_CLM_l0mix[idx], out_null_flip_CLM_l1mix[idx], col=&#39;red&#39;, pch=16)
 abline(0,1)</code></pre>
 <p><img src="figure/diagnostic_lr.Rmd/unnamed-chunk-12-2.png" width="672" style="display: block; margin: auto;" /></p>
@@ -1156,6 +1222,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/zouyuxin/susierss_diagnostic/blob/7e973c25826f739f64f47057fcb04a741c57d9b0/docs/figure/diagnostic_lr.Rmd/unnamed-chunk-12-2.png" target="_blank">7e973c2</a>
+</td>
+<td>
+zouyuxin
+</td>
+<td>
+2021-02-16
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/zouyuxin/susierss_diagnostic/blob/26f87300a7b99b89124cb6b5a59a9f82553e1705/docs/figure/diagnostic_lr.Rmd/unnamed-chunk-12-2.png" target="_blank">26f8730</a>
@@ -1228,7 +1305,7 @@ zouyuxin
 </div>
 <p>Comparing LR from Simulation 1.1 and 1.2,</p>
 <pre class="r"><code>par(mfrow=c(2,3))
-plot(out_null_sample_lr, out_null_flip_sample_lr, ylim=c(-3000,500),
+plot(out_null_sample_lr, out_null_flip_sample_lr, ylim=c(-1000,500), xlim=c(min(out_null_sample_lr), 100),
      xlab=&#39;logLR from Simu1.1&#39;,
      ylab=&#39;logLR from Simu1.2&#39;, main=&#39;LD=GBR&#39;)
 points(out_null_sample_lr[idx], out_null_flip_sample_lr[idx], col=&#39;red&#39;, pch=16)
@@ -1236,32 +1313,32 @@ abline(0,1)
 abline(h=0,v=0,lty=4)
 plot(out_null_IBS_lr, out_null_flip_IBS_lr,
      xlab=&#39;logLR from Simu1.1&#39;,
-     ylab=&#39;logLR from Simu1.2&#39;, main=&#39;LD=IBS&#39;)
+     ylab=&#39;logLR from Simu1.2&#39;, main=&#39;LD=IBS&#39;,xlim=c(min(out_null_IBS_lr), 100),ylim = c(-100, 100))
 points(out_null_IBS_lr[idx], out_null_flip_IBS_lr[idx], col=&#39;red&#39;, pch=16)
 abline(0,1)
 abline(h=0,v=0,lty=4)
 plot(out_null_CLM_lr, out_null_flip_CLM_lr,
      xlab=&#39;logLR from Simu1.1&#39;,
-     ylab=&#39;logLR from Simu1.2&#39;, main=&#39;LD=CLM&#39;)
+     ylab=&#39;logLR from Simu1.2&#39;, main=&#39;LD=CLM&#39;,xlim=c(min(out_null_CLM_lr), 100),ylim = c(-100, 100))
 points(out_null_CLM_lr[idx], out_null_flip_CLM_lr[idx], col=&#39;red&#39;, pch=16)
 abline(0,1)
 abline(h=0,v=0,lty=4)
 
 plot(out_null_sample_lrmix, out_null_flip_sample_lrmix,
      xlab=&#39;logLRmix from Simu1.1&#39;,
-     ylab=&#39;logLRmix from Simu1.2&#39;, main=&#39;LD=GBR&#39;)
+     ylab=&#39;logLRmix from Simu1.2&#39;, main=&#39;Mixure model LD=GBR&#39;, ylim=c(-100,20), xlim=c(min(out_null_sample_lrmix), 20))
 points(out_null_sample_lrmix[idx], out_null_flip_sample_lrmix[idx], col=&#39;red&#39;, pch=16)
 abline(0,1)
 abline(h=0,v=0,lty=4)
 plot(out_null_IBS_lrmix, out_null_flip_IBS_lrmix,
      xlab=&#39;logLRmix from Simu1.1&#39;,
-     ylab=&#39;logLRmix from Simu1.2&#39;, main=&#39;LD=IBS&#39;)
+     ylab=&#39;logLRmix from Simu1.2&#39;, main=&#39;Mixure model LD=IBS&#39;, ylim=c(-100,20), xlim=c(min(out_null_IBS_lrmix), 20))
 points(out_null_IBS_lrmix[idx], out_null_flip_IBS_lrmix[idx], col=&#39;red&#39;, pch=16)
 abline(0,1)
 abline(h=0,v=0,lty=4)
 plot(out_null_CLM_lrmix, out_null_flip_CLM_lrmix,
      xlab=&#39;logLRmix from Simu1.1&#39;,
-     ylab=&#39;logLRmix from Simu1.2&#39;, main=&#39;LD=CLM&#39;)
+     ylab=&#39;logLRmix from Simu1.2&#39;, main=&#39;Mixure model LD=CLM&#39;, ylim=c(-100,20), xlim=c(min(out_null_CLM_lrmix), 20))
 points(out_null_CLM_lrmix[idx], out_null_flip_CLM_lrmix[idx], col=&#39;red&#39;, pch=16)
 abline(0,1)
 abline(h=0,v=0,lty=4)</code></pre>
@@ -1288,6 +1365,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/zouyuxin/susierss_diagnostic/blob/7e973c25826f739f64f47057fcb04a741c57d9b0/docs/figure/diagnostic_lr.Rmd/unnamed-chunk-14-1.png" target="_blank">7e973c2</a>
+</td>
+<td>
+zouyuxin
+</td>
+<td>
+2021-02-16
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/zouyuxin/susierss_diagnostic/blob/26f87300a7b99b89124cb6b5a59a9f82553e1705/docs/figure/diagnostic_lr.Rmd/unnamed-chunk-14-1.png" target="_blank">26f8730</a>
@@ -1437,6 +1525,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/zouyuxin/susierss_diagnostic/blob/7e973c25826f739f64f47057fcb04a741c57d9b0/docs/figure/diagnostic_lr.Rmd/unnamed-chunk-18-1.png" target="_blank">7e973c2</a>
+</td>
+<td>
+zouyuxin
+</td>
+<td>
+2021-02-16
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/zouyuxin/susierss_diagnostic/blob/26f87300a7b99b89124cb6b5a59a9f82553e1705/docs/figure/diagnostic_lr.Rmd/unnamed-chunk-18-1.png" target="_blank">26f8730</a>
 </td>
 <td>
@@ -1451,18 +1550,21 @@ zouyuxin
 </div>
 </div>
 <pre class="r"><code>par(mfrow=c(2,3))
-plot(out_sample_l0, out_sample_l1, main=&#39;LD=GBR&#39;, xlab=&#39;log likelihood under null&#39;, ylab=&#39;log likelihood under alternative&#39;)
+plot(out_sample_l0, out_sample_l1, main=&#39;LD=GBR&#39;, xlab=&#39;log likelihood under null&#39;, ylab=&#39;log likelihood under alternative&#39;,
+     ylim=c(2*min(out_sample_l0), max(out_sample_l1)))
 abline(0,1)
-plot(out_IBS_l0, out_IBS_l1, main=&#39;LD=IBS&#39;, xlab=&#39;log likelihood under null&#39;, ylab=&#39;log likelihood under alternative&#39;)
+plot(out_IBS_l0, out_IBS_l1, main=&#39;LD=IBS&#39;, xlab=&#39;log likelihood under null&#39;, ylab=&#39;log likelihood under alternative&#39;,
+     ylim=c(2*min(out_IBS_l0), max(out_IBS_l1)))
 abline(0,1)
-plot(out_CLM_l0, out_CLM_l1, main=&#39;LD=CLM&#39;, xlab=&#39;log likelihood under null&#39;, ylab=&#39;log likelihood under alternative&#39;)
+plot(out_CLM_l0, out_CLM_l1, main=&#39;LD=CLM&#39;, xlab=&#39;log likelihood under null&#39;, ylab=&#39;log likelihood under alternative&#39;,
+     ylim=c(2*min(out_CLM_l0), max(out_CLM_l1)))
 abline(0,1)
 
-plot(out_sample_l0mix, out_sample_l1mix, main=&#39;LD=GBR&#39;, xlab=&#39;log mix likelihood under null&#39;, ylab=&#39;log mix likelihood under alternative&#39;)
+plot(out_sample_l0mix, out_sample_l1mix, main=&#39;Mixture model LD=GBR&#39;, xlab=&#39;log likelihood under null&#39;, ylab=&#39;log likelihood under alternative&#39;, ylim=c(2*min(out_sample_l0mix), max(out_sample_l1mix)))
 abline(0,1)
-plot(out_IBS_l0mix, out_IBS_l1mix, main=&#39;LD=IBS&#39;, xlab=&#39;log mix likelihood under null&#39;, ylab=&#39;log mix likelihood under alternative&#39;)
+plot(out_IBS_l0mix, out_IBS_l1mix, main=&#39;Mixture model LD=IBS&#39;, xlab=&#39;log likelihood under null&#39;, ylab=&#39;log likelihood under alternative&#39;, ylim=c(2*min(out_IBS_l0mix), max(out_IBS_l1mix)))
 abline(0,1)
-plot(out_CLM_l0mix, out_CLM_l1mix, main=&#39;LD=CLM&#39;, xlab=&#39;log mix likelihood under null&#39;, ylab=&#39;log mix likelihood under alternative&#39;)
+plot(out_CLM_l0mix, out_CLM_l1mix, main=&#39;Mixture model LD=CLM&#39;, xlab=&#39;log likelihood under null&#39;, ylab=&#39;log likelihood under alternative&#39;, ylim=c(2*min(out_CLM_l0mix), max(out_CLM_l1mix)))
 abline(0,1)</code></pre>
 <p><img src="figure/diagnostic_lr.Rmd/unnamed-chunk-18-2.png" width="672" style="display: block; margin: auto;" /></p>
 <p>
@@ -1487,6 +1589,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/zouyuxin/susierss_diagnostic/blob/7e973c25826f739f64f47057fcb04a741c57d9b0/docs/figure/diagnostic_lr.Rmd/unnamed-chunk-18-2.png" target="_blank">7e973c2</a>
+</td>
+<td>
+zouyuxin
+</td>
+<td>
+2021-02-16
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/zouyuxin/susierss_diagnostic/blob/26f87300a7b99b89124cb6b5a59a9f82553e1705/docs/figure/diagnostic_lr.Rmd/unnamed-chunk-18-2.png" target="_blank">26f8730</a>
@@ -1641,6 +1754,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/zouyuxin/susierss_diagnostic/blob/7e973c25826f739f64f47057fcb04a741c57d9b0/docs/figure/diagnostic_lr.Rmd/unnamed-chunk-22-1.png" target="_blank">7e973c2</a>
+</td>
+<td>
+zouyuxin
+</td>
+<td>
+2021-02-16
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/zouyuxin/susierss_diagnostic/blob/26f87300a7b99b89124cb6b5a59a9f82553e1705/docs/figure/diagnostic_lr.Rmd/unnamed-chunk-22-1.png" target="_blank">26f8730</a>
 </td>
 <td>
@@ -1655,23 +1779,26 @@ zouyuxin
 </div>
 </div>
 <pre class="r"><code>par(mfrow=c(2,3))
-plot(out_flip_sample_l0, out_flip_sample_l1, main=&#39;LD=GBR&#39;, xlab=&#39;log likelihood under null&#39;, ylab=&#39;log likelihood under alternative&#39;)
+plot(out_flip_sample_l0, out_flip_sample_l1, main=&#39;LD=GBR&#39;, xlab=&#39;log likelihood under null&#39;, ylab=&#39;log likelihood under alternative&#39;,
+     ylim=c(2*min(out_flip_sample_l0), max(out_flip_sample_l1)))
 points(out_flip_sample_l0[idx], out_flip_sample_l1[idx], col=&#39;red&#39;, pch=16)
 abline(0,1)
-plot(out_flip_IBS_l0, out_flip_IBS_l1, main=&#39;LD=IBS&#39;, xlab=&#39;log likelihood under null&#39;, ylab=&#39;log likelihood under alternative&#39;)
+plot(out_flip_IBS_l0, out_flip_IBS_l1, main=&#39;LD=IBS&#39;, xlab=&#39;log likelihood under null&#39;, ylab=&#39;log likelihood under alternative&#39;,
+     ylim=c(2*min(out_flip_IBS_l0), max(out_flip_IBS_l1)))
 points(out_flip_IBS_l0[idx], out_flip_IBS_l1[idx], col=&#39;red&#39;, pch=16)
 abline(0,1)
-plot(out_flip_CLM_l0, out_flip_CLM_l1, main=&#39;LD=CLM&#39;, xlab=&#39;log likelihood under null&#39;, ylab=&#39;log likelihood under alternative&#39;)
+plot(out_flip_CLM_l0, out_flip_CLM_l1, main=&#39;LD=CLM&#39;, xlab=&#39;log likelihood under null&#39;, ylab=&#39;log likelihood under alternative&#39;,
+     ylim=c(2*min(out_flip_CLM_l0), max(out_flip_CLM_l1)))
 points(out_flip_CLM_l0[idx], out_flip_CLM_l1[idx], col=&#39;red&#39;, pch=16)
 abline(0,1)
 
-plot(out_flip_sample_l0mix, out_flip_sample_l1mix, main=&#39;LD=GBR&#39;, xlab=&#39;log mix likelihood under null&#39;, ylab=&#39;log mix likelihood under alternative&#39;)
+plot(out_flip_sample_l0mix, out_flip_sample_l1mix, main=&#39;Mixture model LD=GBR&#39;, xlab=&#39;log likelihood under null&#39;, ylab=&#39;log likelihood under alternative&#39;, ylim=c(2*min(out_flip_sample_l0mix), max(out_flip_sample_l1mix)))
 points(out_flip_sample_l0mix[idx], out_flip_sample_l1mix[idx], col=&#39;red&#39;, pch=16)
 abline(0,1)
-plot(out_flip_IBS_l0mix, out_flip_IBS_l1mix, main=&#39;LD=IBS&#39;, xlab=&#39;log mix likelihood under null&#39;, ylab=&#39;log mix likelihood under alternative&#39;)
+plot(out_flip_IBS_l0mix, out_flip_IBS_l1mix, main=&#39;Mixture model LD=IBS&#39;, xlab=&#39;log likelihood under null&#39;, ylab=&#39;log likelihood under alternative&#39;, ylim=c(2*min(out_flip_IBS_l0mix), max(out_flip_IBS_l1mix)))
 points(out_flip_IBS_l0mix[idx], out_flip_IBS_l1mix[idx], col=&#39;red&#39;, pch=16)
 abline(0,1)
-plot(out_flip_CLM_l0mix, out_flip_CLM_l1mix, main=&#39;LD=CLM&#39;, xlab=&#39;log mix likelihood under null&#39;, ylab=&#39;log mix likelihood under alternative&#39;)
+plot(out_flip_CLM_l0mix, out_flip_CLM_l1mix, main=&#39;Mixture model LD=CLM&#39;, xlab=&#39;log likelihood under null&#39;, ylab=&#39;log likelihood under alternative&#39;, ylim=c(2*min(out_flip_CLM_l0mix), max(out_flip_CLM_l1mix)))
 points(out_flip_CLM_l0mix[idx], out_flip_CLM_l1mix[idx], col=&#39;red&#39;, pch=16)
 abline(0,1)</code></pre>
 <p><img src="figure/diagnostic_lr.Rmd/unnamed-chunk-22-2.png" width="672" style="display: block; margin: auto;" /></p>
@@ -1697,6 +1824,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/zouyuxin/susierss_diagnostic/blob/7e973c25826f739f64f47057fcb04a741c57d9b0/docs/figure/diagnostic_lr.Rmd/unnamed-chunk-22-2.png" target="_blank">7e973c2</a>
+</td>
+<td>
+zouyuxin
+</td>
+<td>
+2021-02-16
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/zouyuxin/susierss_diagnostic/blob/26f87300a7b99b89124cb6b5a59a9f82553e1705/docs/figure/diagnostic_lr.Rmd/unnamed-chunk-22-2.png" target="_blank">26f8730</a>
@@ -1769,7 +1907,7 @@ zouyuxin
 </div>
 <p>Comparing LR from Simulation 2.1 and 2.2,</p>
 <pre class="r"><code>par(mfrow=c(2,3))
-plot(out_sample_lr, out_flip_sample_lr, ylim=c(-3000,500),
+plot(out_sample_lr, out_flip_sample_lr, ylim=c(-1000,500), xlim = c(min(out_sample_lr), 200), 
      xlab=&#39;logLR from Simu2.1&#39;,
      ylab=&#39;logLR from Simu2.2&#39;, main=&#39;LD=GBR&#39;)
 points(out_sample_lr[idx], out_flip_sample_lr[idx], col=&#39;red&#39;, pch=16)
@@ -1777,30 +1915,30 @@ abline(0,1)
 abline(h=0, v=0, lty=4)
 plot(out_IBS_lr, out_flip_IBS_lr,
      xlab=&#39;logLR from Simu2.1&#39;,
-     ylab=&#39;logLR from Simu2.2&#39;, main=&#39;LD=IBS&#39;)
+     ylab=&#39;logLR from Simu2.2&#39;, main=&#39;LD=IBS&#39;, xlim = c(min(out_IBS_lr), 100), ylim=c(-100,200))
 points(out_IBS_lr[idx], out_flip_IBS_lr[idx], col=&#39;red&#39;, pch=16)
 abline(0,1)
 abline(h=0, v=0, lty=4)
 plot(out_CLM_lr, out_flip_CLM_lr,
      xlab=&#39;logLR from Simu2.1&#39;,
-     ylab=&#39;logLR from Simu2.2&#39;, main=&#39;LD=CLM&#39;)
+     ylab=&#39;logLR from Simu2.2&#39;, main=&#39;LD=CLM&#39;, xlim = c(min(out_CLM_lr), 100), ylim=c(-100,200))
 points(out_CLM_lr[idx], out_flip_CLM_lr[idx], col=&#39;red&#39;, pch=16)
 abline(0,1)
 abline(h=0, v=0, lty=4)
 
-plot(out_sample_lrmix, out_flip_sample_lrmix,
+plot(out_sample_lrmix, out_flip_sample_lrmix, xlim=c(min(out_sample_lrmix),10), ylim=c(-50,20),
      xlab=&#39;logLRmix from Simu2.1&#39;,
      ylab=&#39;logLRmix from Simu2.2&#39;, main=&#39;LD=GBR&#39;)
 points(out_sample_lrmix[idx], out_flip_sample_lrmix[idx], col=&#39;red&#39;, pch=16)
 abline(0,1)
 abline(h=0, v=0, lty=4)
-plot(out_IBS_lrmix, out_flip_IBS_lrmix,
+plot(out_IBS_lrmix, out_flip_IBS_lrmix,xlim=c(min(out_IBS_lrmix),10), ylim=c(-50,20),
      xlab=&#39;logLRmix from Simu2.1&#39;,
      ylab=&#39;logLRmix from Simu2.2&#39;, main=&#39;LD=IBS&#39;)
 points(out_IBS_lrmix[idx], out_flip_IBS_lrmix[idx], col=&#39;red&#39;, pch=16)
 abline(0,1)
 abline(h=0, v=0, lty=4)
-plot(out_CLM_lrmix, out_flip_CLM_lrmix,
+plot(out_CLM_lrmix, out_flip_CLM_lrmix,xlim=c(min(out_CLM_lrmix),10), ylim=c(-50,20),
      xlab=&#39;logLRmix from Simu2.1&#39;,
      ylab=&#39;logLRmix from Simu2.2&#39;, main=&#39;LD=CLM&#39;)
 points(out_CLM_lrmix[idx], out_flip_CLM_lrmix[idx], col=&#39;red&#39;, pch=16)
@@ -1829,6 +1967,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/zouyuxin/susierss_diagnostic/blob/7e973c25826f739f64f47057fcb04a741c57d9b0/docs/figure/diagnostic_lr.Rmd/unnamed-chunk-24-1.png" target="_blank">7e973c2</a>
+</td>
+<td>
+zouyuxin
+</td>
+<td>
+2021-02-16
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/zouyuxin/susierss_diagnostic/blob/26f87300a7b99b89124cb6b5a59a9f82553e1705/docs/figure/diagnostic_lr.Rmd/unnamed-chunk-24-1.png" target="_blank">26f8730</a>
@@ -1985,6 +2134,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/zouyuxin/susierss_diagnostic/blob/7e973c25826f739f64f47057fcb04a741c57d9b0/docs/figure/diagnostic_lr.Rmd/unnamed-chunk-28-1.png" target="_blank">7e973c2</a>
+</td>
+<td>
+zouyuxin
+</td>
+<td>
+2021-02-16
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/zouyuxin/susierss_diagnostic/blob/26f87300a7b99b89124cb6b5a59a9f82553e1705/docs/figure/diagnostic_lr.Rmd/unnamed-chunk-28-1.png" target="_blank">26f8730</a>
 </td>
 <td>
@@ -1999,23 +2159,23 @@ zouyuxin
 </div>
 </div>
 <pre class="r"><code>par(mfrow=c(2,3))
-plot(out_flip_null_sample_l0, out_flip_null_sample_l1, main=&#39;LD=GBR&#39;, xlab=&#39;log likelihood under null&#39;, ylab=&#39;log likelihood under alternative&#39;)
+plot(out_flip_null_sample_l0, out_flip_null_sample_l1, main=&#39;LD=GBR&#39;, xlab=&#39;log likelihood under null&#39;, ylab=&#39;log likelihood under alternative&#39;, ylim = c(2*min(out_flip_null_sample_l0), max(out_flip_null_sample_l1)))
 points(out_flip_null_sample_l0[idx], out_flip_null_sample_l1[idx], col=&#39;red&#39;, pch=16)
 abline(0,1)
-plot(out_flip_null_IBS_l0, out_flip_null_IBS_l1, main=&#39;LD=IBS&#39;, xlab=&#39;log likelihood under null&#39;, ylab=&#39;log likelihood under alternative&#39;)
+plot(out_flip_null_IBS_l0, out_flip_null_IBS_l1, main=&#39;LD=IBS&#39;, xlab=&#39;log likelihood under null&#39;, ylab=&#39;log likelihood under alternative&#39;, ylim=c(2*min(out_flip_null_IBS_l0), max(out_flip_null_IBS_l1)))
 points(out_flip_null_IBS_l0[idx], out_flip_null_IBS_l1[idx], col=&#39;red&#39;, pch=16)
 abline(0,1)
-plot(out_flip_null_CLM_l0, out_flip_null_CLM_l1, main=&#39;LD=CLM&#39;, xlab=&#39;log likelihood under null&#39;, ylab=&#39;log likelihood under alternative&#39;)
+plot(out_flip_null_CLM_l0, out_flip_null_CLM_l1, main=&#39;LD=CLM&#39;, xlab=&#39;log likelihood under null&#39;, ylab=&#39;log likelihood under alternative&#39;, ylim=c(2*min(out_flip_null_CLM_l0), max(out_flip_null_CLM_l1)))
 points(out_flip_null_CLM_l0[idx], out_flip_null_CLM_l1[idx], col=&#39;red&#39;, pch=16)
 abline(0,1)
 
-plot(out_flip_null_sample_l0mix, out_flip_null_sample_l1mix, main=&#39;LD=GBR&#39;, xlab=&#39;log mix likelihood under null&#39;, ylab=&#39;log mix likelihood under alternative&#39;)
+plot(out_flip_null_sample_l0mix, out_flip_null_sample_l1mix, main=&#39;Mixture model LD=GBR&#39;, xlab=&#39;log likelihood under null&#39;, ylab=&#39;log likelihood under alternative&#39;, ylim=c(2*min(out_flip_null_sample_l0mix), max(out_flip_null_sample_l1mix)))
 points(out_flip_null_sample_l0mix[idx], out_flip_null_sample_l1mix[idx], col=&#39;red&#39;, pch=16)
 abline(0,1)
-plot(out_flip_null_IBS_l0mix, out_flip_null_IBS_l1mix, main=&#39;LD=IBS&#39;, xlab=&#39;log mix likelihood under null&#39;, ylab=&#39;log mix likelihood under alternative&#39;)
+plot(out_flip_null_IBS_l0mix, out_flip_null_IBS_l1mix, main=&#39;Mixture model LD=IBS&#39;, xlab=&#39;log likelihood under null&#39;, ylab=&#39;log likelihood under alternative&#39;, ylim=c(2*min(out_flip_null_IBS_l0mix), max(out_flip_null_IBS_l1mix)))
 points(out_flip_null_IBS_l0mix[idx], out_flip_null_IBS_l1mix[idx], col=&#39;red&#39;, pch=16)
 abline(0,1)
-plot(out_flip_null_CLM_l0mix, out_flip_null_CLM_l1mix, main=&#39;LD=CLM&#39;, xlab=&#39;log mix likelihood under null&#39;, ylab=&#39;log mix likelihood under alternative&#39;)
+plot(out_flip_null_CLM_l0mix, out_flip_null_CLM_l1mix, main=&#39;Mixture model LD=CLM&#39;, xlab=&#39;log likelihood under null&#39;, ylab=&#39;log likelihood under alternative&#39;, ylim=c(2*min(out_flip_null_CLM_l0mix), max(out_flip_null_CLM_l1mix)))
 points(out_flip_null_CLM_l0mix[idx], out_flip_null_CLM_l1mix[idx], col=&#39;red&#39;, pch=16)
 abline(0,1)</code></pre>
 <p><img src="figure/diagnostic_lr.Rmd/unnamed-chunk-28-2.png" width="672" style="display: block; margin: auto;" /></p>
@@ -2041,6 +2201,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/zouyuxin/susierss_diagnostic/blob/7e973c25826f739f64f47057fcb04a741c57d9b0/docs/figure/diagnostic_lr.Rmd/unnamed-chunk-28-2.png" target="_blank">7e973c2</a>
+</td>
+<td>
+zouyuxin
+</td>
+<td>
+2021-02-16
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/zouyuxin/susierss_diagnostic/blob/26f87300a7b99b89124cb6b5a59a9f82553e1705/docs/figure/diagnostic_lr.Rmd/unnamed-chunk-28-2.png" target="_blank">26f8730</a>
@@ -2113,38 +2284,38 @@ zouyuxin
 </div>
 <p>Comparing LR from Simulation 2.1 and 2.3,</p>
 <pre class="r"><code>par(mfrow=c(2,3))
-plot(out_sample_lr, out_flip_null_sample_lr, ylim=c(-3000,500),
+plot(out_sample_lr, out_flip_null_sample_lr, ylim=c(-1000,500), xlim = c(min(out_sample_lr), 10),
      xlab=&#39;logLR from Simu2.1&#39;,
      ylab=&#39;logLR from Simu2.3&#39;, main=&#39;LD=GBR&#39;)
 points(out_sample_lr[idx], out_flip_null_sample_lr[idx], col=&#39;red&#39;, pch=16)
 abline(0,1)
 abline(h=0,v=0,lty=4)
-plot(out_IBS_lr, out_flip_null_IBS_lr,
+plot(out_IBS_lr, out_flip_null_IBS_lr,ylim=c(-100,100), xlim = c(min(out_IBS_lr), 30),
      xlab=&#39;logLR from Simu2.1&#39;,
      ylab=&#39;logLR from Simu2.3&#39;, main=&#39;LD=IBS&#39;)
 points(out_IBS_lr[idx], out_flip_null_IBS_lr[idx], col=&#39;red&#39;, pch=16)
 abline(0,1)
 abline(h=0,v=0,lty=4)
-plot(out_CLM_lr, out_flip_null_CLM_lr,
+plot(out_CLM_lr, out_flip_null_CLM_lr,ylim=c(-100,100), xlim = c(min(out_CLM_lr), 30),
      xlab=&#39;logLR from Simu2.1&#39;,
      ylab=&#39;logLR from Simu2.3&#39;, main=&#39;LD=CLM&#39;)
 points(out_CLM_lr[idx], out_flip_null_CLM_lr[idx], col=&#39;red&#39;, pch=16)
 abline(0,1)
 abline(h=0,v=0,lty=4)
 
-plot(out_sample_lrmix, out_flip_null_sample_lrmix, 
+plot(out_sample_lrmix, out_flip_null_sample_lrmix, xlim=c(min(out_sample_lrmix),10), ylim=c(-100,10),
      xlab=&#39;logLRmix from Simu2.1&#39;,
      ylab=&#39;logLRmix from Simu2.3&#39;, main=&#39;LD=GBR&#39;)
 points(out_sample_lrmix[idx], out_flip_null_sample_lrmix[idx], col=&#39;red&#39;, pch=16)
 abline(0,1)
 abline(h=0,v=0,lty=4)
-plot(out_IBS_lrmix, out_flip_null_IBS_lrmix,
+plot(out_IBS_lrmix, out_flip_null_IBS_lrmix,xlim=c(min(out_IBS_lrmix),10), ylim=c(-100,10),
      xlab=&#39;logLRmix from Simu2.1&#39;,
      ylab=&#39;logLRmix from Simu2.3&#39;, main=&#39;LD=IBS&#39;)
 points(out_IBS_lrmix[idx], out_flip_null_IBS_lrmix[idx], col=&#39;red&#39;, pch=16)
 abline(0,1)
 abline(h=0,v=0,lty=4)
-plot(out_CLM_lrmix, out_flip_null_CLM_lrmix,
+plot(out_CLM_lrmix, out_flip_null_CLM_lrmix,xlim=c(min(out_CLM_lrmix),10), ylim=c(-100,10),
      xlab=&#39;logLRmix from Simu2.1&#39;,
      ylab=&#39;logLRmix from Simu2.3&#39;, main=&#39;LD=CLM&#39;)
 points(out_CLM_lrmix[idx], out_flip_null_CLM_lrmix[idx], col=&#39;red&#39;, pch=16)
@@ -2173,6 +2344,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/zouyuxin/susierss_diagnostic/blob/7e973c25826f739f64f47057fcb04a741c57d9b0/docs/figure/diagnostic_lr.Rmd/unnamed-chunk-30-1.png" target="_blank">7e973c2</a>
+</td>
+<td>
+zouyuxin
+</td>
+<td>
+2021-02-16
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/zouyuxin/susierss_diagnostic/blob/26f87300a7b99b89124cb6b5a59a9f82553e1705/docs/figure/diagnostic_lr.Rmd/unnamed-chunk-30-1.png" target="_blank">26f8730</a>
