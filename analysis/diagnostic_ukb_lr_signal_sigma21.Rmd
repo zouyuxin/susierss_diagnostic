@@ -1,0 +1,319 @@
+---
+title: "SuSiE RSS Diagnostic using UKB (sigma2 = 1)"
+author: "Yuxin Zou"
+date: "3/14/2021"
+output: 
+  workflowr::wflow_html:
+    code_folding: hide
+---
+
+We want to
+
+1. Check the consistency between z scores and LD matrix using $s^2$;
+
+2. Detect allele switch issue (flipped sign in z score) using conditional distribution.
+
+In diagnostic, we assume the following model,
+$$
+\hat{z} \sim N(Rz, R + s^2 I).
+$$
+
+Let $R = U D U^\intercal$ be eigen-decomposition of $R$, $D$ has $p_1$ positive diagonal elements, $U = [U_1 \ U_2]$, $U_1$ is a $p$ by $p_1$ matrix, $U_2$ is a $p$ by $p_2=p-p_1$ matrix. We transform $\hat{z}$ into null space of $R$ by multiplying $U_2^\intercal$
+$$
+U_2^T \hat{z} \sim N(0, s^2 I_{p_2}).
+$$
+Therefore, the MLE for $s^2$ using partial data is $\frac{1}{p_2} \hat{z}^\intercal U_2 U_2^\intercal \hat{z}$.
+
+Under the null, the posterior distribution of $\hat{z}_j | \hat{z}_{-j}$ is:
+$$
+\hat{z}_j | \hat{z}_{-j} \sim N(-\frac{1}{\Omega_{jj}} \Omega_{j,-j} \hat{z}_{-j},1/\Omega_{jj}), \Omega = (R + s^2 I)^{-1}.
+$$
+
+From the simulation, the standardized differences between observed z score and the conditional mean is longer-tailed than N(0,1). We use a mixture of normals to model the heavier tail empirically. We model the conditional distribution as
+$$
+\hat{z}_j | \hat{z}_{-j} \sim \sum_{k=1}^{K} \pi_k N(-\frac{1}{\Omega_{jj}} \Omega_{j,-j} \hat{z}_{-j},\frac{\sigma_k^2}{\Omega_{jj}}).
+$$
+The $\sigma_k$ is a fixed dense grid, the minimum value is $0.8$, the maximum value is $2\sqrt{max(\text{standardized difference}^2)}$. We estimate $\pi_k$ using `mixsqp`. The likelihood ratio test is based on the mixture distribution.
+
+To check whether there is an allele switch issue, we test the hypothesis $H_0:$ the sign of $\hat{z}_j$ is correct, vs $H_1:$ the sign of $\hat{z}_j$ is flipped. The likelihood ratio is
+$$
+LR = \frac{p(-\hat{z}_j | \hat{z}_{-j})}{p(\hat{z}_j | \hat{z}_{-j})}
+$$
+
+**Simulation Setting**
+
+In the following simulation, we extract 200 regions from UKB. We sample 10,000 UKB individuals to simulate z scores and generate in sample LD. We simulate data without signal and with one signal (PVE 0.02). We sample 1,000 UKB individuals as reference panel. To get GWAS from another population, we use White blood cell count GWAS from BBJ (107,964 samples). There are 1000 SNPs in each region.
+
+```{r message=FALSE}
+library(tibble)
+library(dplyr)
+out = readRDS('data/susierss_diagnostic_ukb_query.rds')
+out = as_tibble(out)
+
+out_signal_ukb_in = out %>% filter(simulate.n_signal == 1, flip_z.flip == FALSE, 
+                                   diagnostic.z_type == 'ukb', diagnostic.ld_type == 'sample')
+out_signal_ukb_ref = out %>% filter(simulate.n_signal == 1, flip_z.flip == FALSE, 
+                                    diagnostic.z_type == 'ukb', diagnostic.ld_type == 'ref')
+
+out_signal_ukb_flipnull_in = out %>% filter(simulate.n_signal == 1, flip_z.flip == TRUE, flip_z.flip_pos == 'null',
+                                            diagnostic.z_type == 'ukb', diagnostic.ld_type == 'sample')
+out_signal_ukb_flipnull_ref = out %>% filter(simulate.n_signal == 1, flip_z.flip == TRUE, flip_z.flip_pos == 'null',
+                                             diagnostic.z_type == 'ukb', diagnostic.ld_type == 'ref')
+
+out_signal_ukb_flipsignal_in = out %>% filter(simulate.n_signal == 1, flip_z.flip == TRUE, flip_z.flip_pos == 'signal',
+                                     diagnostic.z_type == 'ukb', diagnostic.ld_type == 'sample')
+out_signal_ukb_flipsignal_ref = out %>% filter(simulate.n_signal == 1, flip_z.flip == TRUE, flip_z.flip_pos == 'signal',
+                                     diagnostic.z_type == 'ukb', diagnostic.ld_type == 'ref')
+
+out_bbj_ref = out %>% filter(simulate.n_signal == 0, flip_z.flip == FALSE, flip_z.flip_pos == 'null',
+                             diagnostic.z_type == 'bbj', diagnostic.ld_type == 'ref')
+out_bbj_ref_flip = out %>% filter(simulate.n_signal == 0, flip_z.flip == TRUE, flip_z.flip_pos == 'null',
+                             diagnostic.z_type == 'bbj', diagnostic.ld_type == 'ref')
+```
+
+## Simulation 2.1: one signal, no flip
+
+### Check $s^2$
+
+```{r}
+out_signal_ukb_in_s2 = apply(out_signal_ukb_in, 1, function(x) x$diagnostic.res1_sigma2$s2)
+out_signal_ukb_ref_s2 = apply(out_signal_ukb_ref, 1, function(x) x$diagnostic.res1_sigma2$s2)
+
+plot(out_signal_ukb_in_s2, out_signal_ukb_ref_s2, xlab = 'UKB z, in sample LD', ylab='UKB z, UKB ref LD')
+abline(0,1)
+```
+
+### Check conditional mean and Likelihood
+
+```{r}
+z = unlist(lapply(out_signal_ukb_in$diagnostic.res1_sigma2, function(x) x$post$z))
+out_signal_ukb_in_mean = unlist(lapply(out_signal_ukb_in$diagnostic.res1_sigma2, function(x) x$post$postmean))
+out_signal_ukb_in_z = unlist(lapply(out_signal_ukb_in$diagnostic.res1_sigma2, function(x) x$post$post_z))
+out_signal_ukb_in_l0 = unlist(lapply(out_signal_ukb_in$diagnostic.res1_sigma2, function(x) x$post$logl0))
+out_signal_ukb_in_l1 = unlist(lapply(out_signal_ukb_in$diagnostic.res1_sigma2, function(x) x$post$logl1))
+out_signal_ukb_in_lr = unlist(lapply(out_signal_ukb_in$diagnostic.res1_sigma2, function(x) x$post$logLR))
+out_signal_ukb_in_l0mix = unlist(lapply(out_signal_ukb_in$diagnostic.res1_sigma2, function(x) x$post$logl0mix))
+out_signal_ukb_in_l1mix = unlist(lapply(out_signal_ukb_in$diagnostic.res1_sigma2, function(x) x$post$logl1mix))
+out_signal_ukb_in_lrmix = unlist(lapply(out_signal_ukb_in$diagnostic.res1_sigma2, function(x) x$post$logLRmix))
+out_signal_ukb_in_l1mix[is.infinite(out_signal_ukb_in_l1mix)] = -1500
+out_signal_ukb_in_lrmix[is.infinite(out_signal_ukb_in_lrmix)] = -1500
+
+out_signal_ukb_ref_mean = unlist(lapply(out_signal_ukb_ref$diagnostic.res1_sigma2, function(x) x$post$postmean))
+out_signal_ukb_ref_z = unlist(lapply(out_signal_ukb_ref$diagnostic.res1_sigma2, function(x) x$post$post_z))
+out_signal_ukb_ref_l0 = unlist(lapply(out_signal_ukb_ref$diagnostic.res1_sigma2, function(x) x$post$logl0))
+out_signal_ukb_ref_l1 = unlist(lapply(out_signal_ukb_ref$diagnostic.res1_sigma2, function(x) x$post$logl1))
+out_signal_ukb_ref_lr = unlist(lapply(out_signal_ukb_ref$diagnostic.res1_sigma2, function(x) x$post$logLR))
+out_signal_ukb_ref_l0mix = unlist(lapply(out_signal_ukb_ref$diagnostic.res1_sigma2, function(x) x$post$logl0mix))
+out_signal_ukb_ref_l1mix = unlist(lapply(out_signal_ukb_ref$diagnostic.res1_sigma2, function(x) x$post$logl1mix))
+out_signal_ukb_ref_lrmix = unlist(lapply(out_signal_ukb_ref$diagnostic.res1_sigma2, function(x) x$post$logLRmix))
+out_signal_ukb_ref_l1mix[is.infinite(out_signal_ukb_ref_l1mix)] = -1500
+out_signal_ukb_ref_lrmix[is.infinite(out_signal_ukb_ref_lrmix)] = -1500
+```
+
+We focus on those z scores with magnitude greater than 2.
+```{r}
+zlarge = which(abs(z) > 2)
+par(mfrow=c(1,2))
+plot(out_signal_ukb_in_l0mix[zlarge], out_signal_ukb_in_l1mix[zlarge], main='Mixture model, UKB z, in sample LD', xlab='log likelihood under null', ylab='log likelihood under alternative', ylim=c(2*min(out_signal_ukb_in_l0mix), max(out_signal_ukb_in_l1mix)), cex.main=0.7)
+abline(0,1)
+plot(out_signal_ukb_ref_l0mix[zlarge], out_signal_ukb_ref_l1mix[zlarge], main='Mixture model, UKB z, UKB ref LD', xlab='log likelihood under null', ylab='log likelihood under alternative', ylim=c(2*min(out_signal_ukb_ref_l0mix[zlarge]), max(out_signal_ukb_ref_l1mix[zlarge])), cex.main=0.7)
+abline(0,1)
+```
+
+## Simulation 2.2: flipped sign at signal
+
+Based on simulation 2.1, we flipped sign of signal.
+
+### Check $s^2$
+
+```{r}
+out_signal_ukb_flipsignal_in_s2 = apply(out_signal_ukb_flipsignal_in, 1, function(x) x$diagnostic.res1_sigma2$s2)
+out_signal_ukb_flipsignal_ref_s2 = apply(out_signal_ukb_flipsignal_ref, 1, function(x) x$diagnostic.res1_sigma2$s2)
+
+plot(out_signal_ukb_flipsignal_in_s2, out_signal_ukb_flipsignal_ref_s2, xlab = 'UKB z, in sample LD', ylab='UKB z, UKB ref LD')
+abline(0,1)
+```
+
+### Check conditional mean and Likelihood
+
+```{r}
+z_flip = unlist(lapply(out_signal_ukb_flipsignal_in$diagnostic.res1_sigma2, function(x) x$post$z))
+out_signal_ukb_flipsignal_in_mean = unlist(lapply(out_signal_ukb_flipsignal_in$diagnostic.res1_sigma2, function(x) x$post$postmean))
+out_signal_ukb_flipsignal_in_z = unlist(lapply(out_signal_ukb_flipsignal_in$diagnostic.res1_sigma2, function(x) x$post$post_z))
+out_signal_ukb_flipsignal_in_l0 = unlist(lapply(out_signal_ukb_flipsignal_in$diagnostic.res1_sigma2, function(x) x$post$logl0))
+out_signal_ukb_flipsignal_in_l1 = unlist(lapply(out_signal_ukb_flipsignal_in$diagnostic.res1_sigma2, function(x) x$post$logl1))
+out_signal_ukb_flipsignal_in_lr = unlist(lapply(out_signal_ukb_flipsignal_in$diagnostic.res1_sigma2, function(x) x$post$logLR))
+out_signal_ukb_flipsignal_in_l0mix = unlist(lapply(out_signal_ukb_flipsignal_in$diagnostic.res1_sigma2, function(x) x$post$logl0mix))
+out_signal_ukb_flipsignal_in_l1mix = unlist(lapply(out_signal_ukb_flipsignal_in$diagnostic.res1_sigma2, function(x) x$post$logl1mix))
+out_signal_ukb_flipsignal_in_lrmix = unlist(lapply(out_signal_ukb_flipsignal_in$diagnostic.res1_sigma2, function(x) x$post$logLRmix))
+out_signal_ukb_flipsignal_in_l1mix[is.infinite(out_signal_ukb_flipsignal_in_l1mix)] = -1500
+out_signal_ukb_flipsignal_in_lrmix[is.infinite(out_signal_ukb_flipsignal_in_lrmix)] = -1500
+
+out_signal_ukb_flipsignal_ref_mean = unlist(lapply(out_signal_ukb_flipsignal_ref$diagnostic.res1_sigma2, function(x) x$post$postmean))
+out_signal_ukb_flipsignal_ref_z = unlist(lapply(out_signal_ukb_flipsignal_ref$diagnostic.res1_sigma2, function(x) x$post$post_z))
+out_signal_ukb_flipsignal_ref_l0 = unlist(lapply(out_signal_ukb_flipsignal_ref$diagnostic.res1_sigma2, function(x) x$post$logl0))
+out_signal_ukb_flipsignal_ref_l1 = unlist(lapply(out_signal_ukb_flipsignal_ref$diagnostic.res1_sigma2, function(x) x$post$logl1))
+out_signal_ukb_flipsignal_ref_lr = unlist(lapply(out_signal_ukb_flipsignal_ref$diagnostic.res1_sigma2, function(x) x$post$logLR))
+out_signal_ukb_flipsignal_ref_l0mix = unlist(lapply(out_signal_ukb_flipsignal_ref$diagnostic.res1_sigma2, function(x) x$post$logl0mix))
+out_signal_ukb_flipsignal_ref_l1mix = unlist(lapply(out_signal_ukb_flipsignal_ref$diagnostic.res1_sigma2, function(x) x$post$logl1mix))
+out_signal_ukb_flipsignal_ref_lrmix = unlist(lapply(out_signal_ukb_flipsignal_ref$diagnostic.res1_sigma2, function(x) x$post$logLRmix))
+```
+
+
+```{r}
+idx = which(z != z_flip)
+par(mfrow=c(1,2))
+plot(out_signal_ukb_flipsignal_in_l0mix[zlarge], out_signal_ukb_flipsignal_in_l1mix[zlarge], main='Mixture model, UKB z, in sample LD', xlab='log likelihood under null', ylab='log likelihood under alternative', ylim=c(2*min(out_signal_ukb_flipsignal_in_l0mix[zlarge]), max(out_signal_ukb_flipsignal_in_l1mix[zlarge])), cex.main=0.7)
+points(out_signal_ukb_flipsignal_in_l0mix[intersect(idx, zlarge)], out_signal_ukb_flipsignal_in_l1mix[intersect(idx, zlarge)], col='red', pch=16)
+abline(0,1)
+plot(out_signal_ukb_flipsignal_ref_l0mix[zlarge], out_signal_ukb_flipsignal_ref_l1mix[zlarge], main='Mixture model, UKB z, UKB ref LD', xlab='log likelihood under null', ylab='log likelihood under alternative', ylim=c(2*min(out_signal_ukb_flipsignal_ref_l0mix[zlarge]), max(out_signal_ukb_flipsignal_ref_l1mix[zlarge])), cex.main=0.7)
+points(out_signal_ukb_flipsignal_ref_l0mix[intersect(idx, zlarge)], out_signal_ukb_flipsignal_ref_l1mix[intersect(idx, zlarge)], col='red', pch=16)
+abline(0,1)
+```
+
+Comparing LR from Simulation 2.1 and 2.2,
+```{r}
+par(mfrow=c(1,2))
+plot(out_signal_ukb_in_lrmix[zlarge], out_signal_ukb_flipsignal_in_lrmix[zlarge], xlim = c(-1000,20), ylim=c(-50,20),
+     xlab='logLRmix from Simu2.1',
+     ylab='logLRmix from Simu2.2', main='UKB z, in sample LD')
+points(out_signal_ukb_in_lrmix[intersect(idx, zlarge)], out_signal_ukb_flipsignal_in_lrmix[intersect(idx, zlarge)], col='red', pch=16)
+abline(0,1)
+abline(h=0, v=0, lty=4)
+plot(out_signal_ukb_ref_lrmix[zlarge], out_signal_ukb_flipsignal_ref_lrmix[zlarge], xlim = c(-1000,20), ylim=c(-50,20),
+     xlab='logLRmix from Simu2.1',
+     ylab='logLRmix from Simu2.2', main='UKB z, UKB ref LD')
+points(out_signal_ukb_ref_lrmix[intersect(idx, zlarge)], out_signal_ukb_flipsignal_ref_lrmix[intersect(idx, zlarge)], col='red', pch=16)
+abline(0,1)
+abline(h=0, v=0, lty=4)
+```
+
+## Simulation 2.3: flipped sign at null
+
+Based on Simulation 2.1, we randomly flipped sign of one non-signal z score.
+
+### Check $s^2$
+
+```{r}
+out_signal_ukb_flipnull_in_s2 = apply(out_signal_ukb_flipnull_in, 1, function(x) x$diagnostic.res1_sigma2$s2)
+out_signal_ukb_flipnull_ref_s2 = apply(out_signal_ukb_flipnull_ref, 1, function(x) x$diagnostic.res1_sigma2$s2)
+
+plot(out_signal_ukb_flipnull_in_s2, out_signal_ukb_flipnull_ref_s2, xlab = 'UKB z, in sample LD', ylab='UKB z, UKB ref LD')
+abline(0,1)
+```
+
+### Check conditional mean and Likelihood
+
+```{r}
+z_flip = unlist(lapply(out_signal_ukb_flipnull_in$diagnostic.res1_sigma2, function(x) x$post$z))
+out_signal_ukb_flipnull_in_mean = unlist(lapply(out_signal_ukb_flipnull_in$diagnostic.res1_sigma2, function(x) x$post$postmean))
+out_signal_ukb_flipnull_in_z = unlist(lapply(out_signal_ukb_flipnull_in$diagnostic.res1_sigma2, function(x) x$post$post_z))
+out_signal_ukb_flipnull_in_l0 = unlist(lapply(out_signal_ukb_flipnull_in$diagnostic.res1_sigma2, function(x) x$post$logl0))
+out_signal_ukb_flipnull_in_l1 = unlist(lapply(out_signal_ukb_flipnull_in$diagnostic.res1_sigma2, function(x) x$post$logl1))
+out_signal_ukb_flipnull_in_lr = unlist(lapply(out_signal_ukb_flipnull_in$diagnostic.res1_sigma2, function(x) x$post$logLR))
+out_signal_ukb_flipnull_in_l0mix = unlist(lapply(out_signal_ukb_flipnull_in$diagnostic.res1_sigma2, function(x) x$post$logl0mix))
+out_signal_ukb_flipnull_in_l1mix = unlist(lapply(out_signal_ukb_flipnull_in$diagnostic.res1_sigma2, function(x) x$post$logl1mix))
+out_signal_ukb_flipnull_in_lrmix = unlist(lapply(out_signal_ukb_flipnull_in$diagnostic.res1_sigma2, function(x) x$post$logLRmix))
+out_signal_ukb_flipnull_in_l1mix[is.infinite(out_signal_ukb_flipnull_in_l1mix)] = -1500
+out_signal_ukb_flipnull_in_lrmix[is.infinite(out_signal_ukb_flipnull_in_lrmix)] = -1500
+
+out_signal_ukb_flipnull_ref_mean = unlist(lapply(out_signal_ukb_flipnull_ref$diagnostic.res1_sigma2, function(x) x$post$postmean))
+out_signal_ukb_flipnull_ref_z = unlist(lapply(out_signal_ukb_flipnull_ref$diagnostic.res1_sigma2, function(x) x$post$post_z))
+out_signal_ukb_flipnull_ref_l0 = unlist(lapply(out_signal_ukb_flipnull_ref$diagnostic.res1_sigma2, function(x) x$post$logl0))
+out_signal_ukb_flipnull_ref_l1 = unlist(lapply(out_signal_ukb_flipnull_ref$diagnostic.res1_sigma2, function(x) x$post$logl1))
+out_signal_ukb_flipnull_ref_lr = unlist(lapply(out_signal_ukb_flipnull_ref$diagnostic.res1_sigma2, function(x) x$post$logLR))
+out_signal_ukb_flipnull_ref_l0mix = unlist(lapply(out_signal_ukb_flipnull_ref$diagnostic.res1_sigma2, function(x) x$post$logl0mix))
+out_signal_ukb_flipnull_ref_l1mix = unlist(lapply(out_signal_ukb_flipnull_ref$diagnostic.res1_sigma2, function(x) x$post$logl1mix))
+out_signal_ukb_flipnull_ref_lrmix = unlist(lapply(out_signal_ukb_flipnull_ref$diagnostic.res1_sigma2, function(x) x$post$logLRmix))
+```
+
+
+```{r}
+idx = which(z != z_flip)
+par(mfrow=c(1,2))
+plot(out_signal_ukb_flipnull_in_l0mix[zlarge], out_signal_ukb_flipnull_in_l1mix[zlarge], main='Mixture model, UKB z, in sample LD', xlab='log likelihood under null', ylab='log likelihood under alternative', ylim=c(2*min(out_signal_ukb_flipnull_in_l0mix[zlarge]), max(out_signal_ukb_flipnull_in_l1mix[zlarge])), cex.main=0.7)
+points(out_signal_ukb_flipnull_in_l0mix[intersect(idx, zlarge)], out_signal_ukb_flipnull_in_l1mix[intersect(idx, zlarge)], col='red', pch=16)
+abline(0,1)
+plot(out_signal_ukb_flipnull_ref_l0mix[zlarge], out_signal_ukb_flipnull_ref_l1mix[zlarge], main='Mixture model, UKB z, UKB ref LD', xlab='log likelihood under null', ylab='log likelihood under alternative', ylim=c(2*min(out_signal_ukb_flipnull_ref_l0mix[zlarge]), max(out_signal_ukb_flipnull_ref_l1mix[zlarge])), cex.main=0.7)
+points(out_signal_ukb_flipnull_ref_l0mix[intersect(idx, zlarge)], out_signal_ukb_flipnull_ref_l1mix[intersect(idx, zlarge)], col='red', pch=16)
+abline(0,1)
+```
+
+Comparing LR from Simulation 2.1 and 2.2,
+```{r}
+par(mfrow=c(1,2))
+plot(out_signal_ukb_in_lrmix[zlarge], out_signal_ukb_flipnull_in_lrmix[zlarge], xlim = c(-1000,20), ylim=c(-50,20),
+     xlab='logLRmix from Simu2.1',
+     ylab='logLRmix from Simu2.2', main='UKB z, in sample LD')
+points(out_signal_ukb_in_lrmix[intersect(idx, zlarge)], out_signal_ukb_flipnull_in_lrmix[intersect(idx, zlarge)], col='red', pch=16)
+abline(0,1)
+abline(h=0, v=0, lty=4)
+plot(out_signal_ukb_ref_lrmix[zlarge], out_signal_ukb_flipnull_ref_lrmix[zlarge], xlim = c(-1000,20), ylim=c(-50,20),
+     xlab='logLRmix from Simu2.1',
+     ylab='logLRmix from Simu2.2', main='UKB z, UKB ref LD')
+points(out_signal_ukb_ref_lrmix[intersect(idx, zlarge)], out_signal_ukb_flipnull_ref_lrmix[intersect(idx, zlarge)], col='red', pch=16)
+abline(0,1)
+abline(h=0, v=0, lty=4)
+```
+
+## Simulation 3: BBJ
+
+In Simulation 3.1, the z scores are from BBJ. We use reference LD matrix from UKB.
+
+In simulation 3.2, we randomly flip one z score.
+
+### Check $s^2$
+
+```{r}
+out_bbj_ref_s2 = apply(out_bbj_ref, 1, function(x) x$diagnostic.res1_sigma2$s2)
+out_bbj_ref_flip_s2 = apply(out_bbj_ref_flip, 1, function(x) x$diagnostic.res1_sigma2$s2)
+
+plot(out_bbj_ref_s2, out_bbj_ref_flip_s2, xlab = 'BBJ z, UKB ref LD', ylab='BBJ z, UKB ref LD, flip sign')
+abline(0,1)
+```
+
+### Check conditional mean and Likelihood
+
+```{r}
+z = unlist(lapply(out_bbj_ref$diagnostic.res1_sigma2, function(x) x$post$z))
+out_bbj_ref_mean = unlist(lapply(out_bbj_ref$diagnostic.res1_sigma2, function(x) x$post$postmean))
+out_bbj_ref_z = unlist(lapply(out_bbj_ref$diagnostic.res1_sigma2, function(x) x$post$post_z))
+out_bbj_ref_l0 = unlist(lapply(out_bbj_ref$diagnostic.res1_sigma2, function(x) x$post$logl0))
+out_bbj_ref_l1 = unlist(lapply(out_bbj_ref$diagnostic.res1_sigma2, function(x) x$post$logl1))
+out_bbj_ref_lr = unlist(lapply(out_bbj_ref$diagnostic.res1_sigma2, function(x) x$post$logLR))
+out_bbj_ref_l0mix = unlist(lapply(out_bbj_ref$diagnostic.res1_sigma2, function(x) x$post$logl0mix))
+out_bbj_ref_l1mix = unlist(lapply(out_bbj_ref$diagnostic.res1_sigma2, function(x) x$post$logl1mix))
+out_bbj_ref_lrmix = unlist(lapply(out_bbj_ref$diagnostic.res1_sigma2, function(x) x$post$logLRmix))
+
+z_flip = unlist(lapply(out_bbj_ref_flip$diagnostic.res1_sigma2, function(x) x$post$z))
+out_bbj_ref_flip_mean = unlist(lapply(out_bbj_ref_flip$diagnostic.res1_sigma2, function(x) x$post$postmean))
+out_bbj_ref_flip_z = unlist(lapply(out_bbj_ref_flip$diagnostic.res1_sigma2, function(x) x$post$post_z))
+out_bbj_ref_flip_l0 = unlist(lapply(out_bbj_ref_flip$diagnostic.res1_sigma2, function(x) x$post$logl0))
+out_bbj_ref_flip_l1 = unlist(lapply(out_bbj_ref_flip$diagnostic.res1_sigma2, function(x) x$post$logl1))
+out_bbj_ref_flip_lr = unlist(lapply(out_bbj_ref_flip$diagnostic.res1_sigma2, function(x) x$post$logLR))
+out_bbj_ref_flip_l0mix = unlist(lapply(out_bbj_ref_flip$diagnostic.res1_sigma2, function(x) x$post$logl0mix))
+out_bbj_ref_flip_l1mix = unlist(lapply(out_bbj_ref_flip$diagnostic.res1_sigma2, function(x) x$post$logl1mix))
+out_bbj_ref_flip_lrmix = unlist(lapply(out_bbj_ref_flip$diagnostic.res1_sigma2, function(x) x$post$logLRmix))
+```
+
+```{r}
+zlarge = which(abs(z) > 2)
+idx = which(z != z_flip)
+par(mfrow=c(1,2))
+plot(out_bbj_ref_l0mix[zlarge], out_bbj_ref_l1mix[zlarge], main='Mixture model, BBJ z, UKB ref LD', xlab='log likelihood under null', ylab='log likelihood under alternative', cex.main=0.7, ylim=c(-150, max(out_bbj_ref_l1mix[zlarge])))
+points(out_bbj_ref_l0mix[intersect(idx, zlarge)], out_bbj_ref_l1mix[intersect(idx, zlarge)], col='red', pch=16)
+abline(0,1)
+plot(out_bbj_ref_flip_l0mix[zlarge], out_bbj_ref_flip_l1mix[zlarge], main='Mixture model, UKB z, UKB ref LD, flip', xlab='log likelihood under null', ylab='log likelihood under alternative', cex.main=0.7,  ylim=c(-150, max(out_bbj_ref_flip_l1mix[zlarge])))
+points(out_bbj_ref_flip_l0mix[intersect(idx, zlarge)], out_bbj_ref_flip_l1mix[intersect(idx, zlarge)], col='red', pch=16)
+abline(0,1)
+```
+
+Comparing LR
+```{r}
+plot(out_bbj_ref_lrmix[zlarge], out_bbj_ref_flip_lrmix[zlarge], xlim = c(-1000,20), ylim=c(-50,20),
+     xlab='No flip',
+     ylab='flip', main='BBJ z, UKB ref LD')
+points(out_bbj_ref_lrmix[intersect(idx, zlarge)], out_bbj_ref_flip_lrmix[intersect(idx, zlarge)], col='red', pch=16)
+abline(0,1)
+abline(h=0, v=0, lty=4)
+```
