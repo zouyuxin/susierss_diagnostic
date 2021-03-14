@@ -1,0 +1,36 @@
+---
+title: "SuSiE RSS UKB Diagnostic Example"
+author: "Yuxin Zou"
+date: "3/14/2021"
+output: 
+  workflowr::wflow_html:
+    code_folding: hide
+---
+
+There are 1002 SNPs in the region.
+```{r}
+dat = readRDS('data/rss_diagnostic_ukb_s2large.rds')
+z = dat$z
+zorig = z
+zorig[dat$idx] = -z[dat$idx]
+ld = dat$ld[['sample']]
+```
+
+The original z scores are
+```{r}
+plot(zorig, pch=16)
+points(dat$idx, zorig[dat$idx], col='red', pch=16)
+```
+We flip the red dot. The estimated $s^2$ is 
+```{r}
+eigenld = eigen(ld)
+eigenld$values[eigenld$values < 1e-8] = 0
+colspace = which(eigenld$values > 0)
+Uz = crossprod(eigenld$vectors, z)
+zcol = crossprod(eigenld$vectors[,colspace], z) # U1^T z
+znull = crossprod(eigenld$vectors[,-colspace], z) # U2^T z
+s2est = sum(znull^2)/length(znull)
+s2est
+```
+
+
