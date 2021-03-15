@@ -15,3 +15,11 @@ Simulation under null: [result](diagnostic_null.html)
 Simulation: [result](diagnostic_lr.html)
 
 Eg: [eg](diagnostic_lr_eg.html)
+
+Simulation using UKB: 
+
+  1. [Large s2](diagnostic_ukb_lr_signal_eg.Rmd)
+  
+  2. [under null](diagnostic_ukb_lr_null_sigma21.Rmd)
+  
+  3. [with signal](diagnostic_ukb_lr_signal_sigma21.Rmd)
