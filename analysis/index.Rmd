@@ -18,8 +18,8 @@ Eg: [eg](diagnostic_lr_eg.html)
 
 Simulation using UKB: 
 
-  1. [Large s2](diagnostic_ukb_lr_signal_eg.Rmd)
+  1. [Large s2](diagnostic_ukb_lr_signal_eg.html)
   
-  2. [under null](diagnostic_ukb_lr_null_sigma21.Rmd)
+  2. [under null](diagnostic_ukb_lr_null_sigma21.html)
   
-  3. [with signal](diagnostic_ukb_lr_signal_sigma21.Rmd)
+  3. [with signal](diagnostic_ukb_lr_signal_sigma21.html)
