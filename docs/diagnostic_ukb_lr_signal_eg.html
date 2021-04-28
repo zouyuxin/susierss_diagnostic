@@ -20,6 +20,15 @@
 <script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
 <script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
 <link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
 <script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
@@ -27,8 +36,6 @@
 <script src="site_libs/navigation-1.1/codefolding.js"></script>
 <link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
-<link href="site_libs/anchor-sections-1.0/anchor-sections.css" rel="stylesheet" />
-<script src="site_libs/anchor-sections-1.0/anchor-sections.js"></script>
 
 <link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/master/img/reproducible.png">
 <!-- Add a small amount of space between sections. -->
@@ -48,11 +55,6 @@ div.section {
     </style>
 
 <style type="text/css">code{white-space: pre;}</style>
-<style type="text/css">
-  pre:not([class]) {
-    background-color: white;
-  }
-</style>
 <script type="text/javascript">
 if (window.hljs) {
   hljs.configure({languages: []});
@@ -65,32 +67,7 @@ if (window.hljs) {
 
 
 
-<style type="text/css">
-h1 {
-  font-size: 34px;
-}
-h1.title {
-  font-size: 38px;
-}
-h2 {
-  font-size: 30px;
-}
-h3 {
-  font-size: 24px;
-}
-h4 {
-  font-size: 18px;
-}
-h5 {
-  font-size: 16px;
-}
-h6 {
-  font-size: 12px;
-}
-.table th:not([align]) {
-  text-align: left;
-}
-</style>
+
 
 
 
@@ -100,10 +77,6 @@ h6 {
   max-width: 940px;
   margin-left: auto;
   margin-right: auto;
-}
-code {
-  color: inherit;
-  background-color: rgba(0, 0, 0, 0.04);
 }
 img {
   max-width:100%;
@@ -120,40 +93,13 @@ button.code-folding-btn:focus {
 summary {
   display: list-item;
 }
+pre code {
+  padding: 0;
+}
 </style>
 
 
 <style type="text/css">
-/* padding for bootstrap navbar */
-body {
-  padding-top: 51px;
-  padding-bottom: 40px;
-}
-/* offset scroll position for anchor links (for fixed navbar)  */
-.section h1 {
-  padding-top: 56px;
-  margin-top: -56px;
-}
-.section h2 {
-  padding-top: 56px;
-  margin-top: -56px;
-}
-.section h3 {
-  padding-top: 56px;
-  margin-top: -56px;
-}
-.section h4 {
-  padding-top: 56px;
-  margin-top: -56px;
-}
-.section h5 {
-  padding-top: 56px;
-  margin-top: -56px;
-}
-.section h6 {
-  padding-top: 56px;
-  margin-top: -56px;
-}
 .dropdown-submenu {
   position: relative;
 }
@@ -181,7 +127,7 @@ body {
   margin-right: -10px;
 }
 .dropdown-submenu:hover>a:after {
-  border-left-color: #ffffff;
+  border-left-color: #adb5bd;
 }
 .dropdown-submenu.pull-left {
   float: none;
@@ -193,7 +139,7 @@ body {
 }
 </style>
 
-<script>
+<script type="text/javascript">
 // manage active state of menu based on current page
 $(document).ready(function () {
   // active menu anchor
@@ -204,10 +150,23 @@ $(document).ready(function () {
   var menuAnchor = $('a[href="' + href + '"]');
 
   // mark it active
-  menuAnchor.parent().addClass('active');
+  menuAnchor.tab('show');
 
   // if it's got a parent navbar menu mark it active as well
   menuAnchor.closest('li.dropdown').addClass('active');
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
 });
 </script>
 
@@ -219,7 +178,6 @@ $(document).ready(function () {
   max-height: 500px;
   min-height: 44px;
   overflow-y: auto;
-  background: white;
   border: 1px solid #ddd;
   border-radius: 4px;
 }
@@ -348,13 +306,13 @@ div.tocify {
 
 
 <!-- setup 3col/9col grid for toc_float and main content  -->
-<div class="row-fluid">
-<div class="col-xs-12 col-sm-4 col-md-3">
+<div class="row">
+<div class="col-sm-12 col-md-4 col-lg-3">
 <div id="TOC" class="tocify">
 </div>
 </div>
 
-<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+<div class="toc-content col-sm-12 col-md-8 col-lg-9">
 
 
 
@@ -388,11 +346,11 @@ div.tocify {
   </div><!--/.container -->
 </div><!--/.navbar -->
 
-<div class="fluid-row" id="header">
+<div id="header">
 
-<div class="btn-group pull-right">
-<button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
-<ul class="dropdown-menu" style="min-width: 50px;">
+<div class="btn-group pull-right float-right">
+<button type="button" class="btn btn-default btn-xs btn-secondary btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu dropdown-menu-right" style="min-width: 50px;">
 <li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
 <li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
 </ul>
@@ -427,7 +385,7 @@ div.tocify {
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2021-03-14
+<strong>Last updated:</strong> 2021-04-28
 </p>
 <p>
 <strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
@@ -518,16 +476,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomzouyuxinsusierssdiagnostictree86858caa0fa57acf88e93b1138524e4555e759a8targetblank86858caa"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/zouyuxin/susierss_diagnostic/tree/86858caa0fa57acf88e93b1138524e4555e759a8" target="_blank">86858ca</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomzouyuxinsusierssdiagnostictree85aa614870aab8b83f15d1a77dffd47962b6a451targetblank85aa614a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/zouyuxin/susierss_diagnostic/tree/85aa614870aab8b83f15d1a77dffd47962b6a451" target="_blank">85aa614</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomzouyuxinsusierssdiagnostictree86858caa0fa57acf88e93b1138524e4555e759a8targetblank86858caa" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomzouyuxinsusierssdiagnostictree85aa614870aab8b83f15d1a77dffd47962b6a451targetblank85aa614a" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/zouyuxin/susierss_diagnostic/tree/86858caa0fa57acf88e93b1138524e4555e759a8" target="_blank">86858ca</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/zouyuxin/susierss_diagnostic/tree/85aa614870aab8b83f15d1a77dffd47962b6a451" target="_blank">85aa614</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -536,16 +494,14 @@ Note that you need to be careful to ensure that all relevant files for the analy
 Ignored files:
     Ignored:    .Rhistory
     Ignored:    .Rproj.user/
+    Ignored:    analysis/figure/
     Ignored:    output/.DS_Store
 
 Untracked files:
-    Untracked:  analysis/diagnostic_ukb_lr_null_sigma21.Rmd
-    Untracked:  analysis/diagnostic_ukb_lr_signal.Rmd
-    Untracked:  analysis/diagnostic_ukb_lr_signal_sigma21.Rmd
     Untracked:  output/simulation_null_CLM_post.rds
 
 Unstaged changes:
-    Modified:   analysis/diagnostic_ukb_lr_null.Rmd
+    Modified:   analysis/diagnostic_ukb_lr_null_sigma21.Rmd
 
 </code></pre>
 <p>
@@ -589,6 +545,40 @@ Message
 Rmd
 </td>
 <td>
+<a href="https://github.com/zouyuxin/susierss_diagnostic/blob/85aa614870aab8b83f15d1a77dffd47962b6a451/analysis/diagnostic_ukb_lr_signal_eg.Rmd" target="_blank">85aa614</a>
+</td>
+<td>
+zouyuxin
+</td>
+<td>
+2021-04-28
+</td>
+<td>
+wflow_publish(“analysis/diagnostic_ukb_lr_signal_eg.Rmd”)
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/zouyuxin/susierss_diagnostic/b179efddf862d71ebeb7437d1fa4c7e045386916/docs/diagnostic_ukb_lr_signal_eg.html" target="_blank">b179efd</a>
+</td>
+<td>
+zouyuxin
+</td>
+<td>
+2021-03-14
+</td>
+<td>
+Build site.
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
 <a href="https://github.com/zouyuxin/susierss_diagnostic/blob/86858caa0fa57acf88e93b1138524e4555e759a8/analysis/diagnostic_ukb_lr_signal_eg.Rmd" target="_blank">86858ca</a>
 </td>
 <td>
@@ -609,7 +599,8 @@ wflow_publish(“analysis/diagnostic_ukb_lr_signal_eg.Rmd”)
 </div>
 </div>
 <p>There are 1002 SNPs in the region.</p>
-<pre class="r"><code>dat = readRDS(&#39;data/rss_diagnostic_ukb_s2large.rds&#39;)
+<pre class="r"><code>library(mixsqp)
+dat = readRDS(&#39;data/rss_diagnostic_ukb_s2large.rds&#39;)
 z = dat$z
 zorig = z
 zorig[dat$idx] = -z[dat$idx]
@@ -617,16 +608,139 @@ ld = dat$ld[[&#39;sample&#39;]]</code></pre>
 <p>The original z scores are</p>
 <pre class="r"><code>plot(zorig, pch=16)
 points(dat$idx, zorig[dat$idx], col=&#39;red&#39;, pch=16)</code></pre>
-<p><img src="figure/diagnostic_ukb_lr_signal_eg.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /> We flip the red dot. The estimated <span class="math inline">\(s^2\)</span> is</p>
+<p><img src="figure/diagnostic_ukb_lr_signal_eg.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-1">
+Past versions of unnamed-chunk-2-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/zouyuxin/susierss_diagnostic/blob/b179efddf862d71ebeb7437d1fa4c7e045386916/docs/figure/diagnostic_ukb_lr_signal_eg.Rmd/unnamed-chunk-2-1.png" target="_blank">b179efd</a>
+</td>
+<td>
+zouyuxin
+</td>
+<td>
+2021-03-14
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>posterior_cond = function(z, precision){
+  postmean = c()
+  postvar = c()
+  for(i in 1:length(z)){
+    postmean = c(postmean, -(1/precision[i,i]) * precision[i,-i] %*% z[-i])
+    postvar = c(postvar, 1/precision[i,i])
+  }
+  prob = pnorm(z, postmean, sd = sqrt(postvar))
+  prob = pmin(prob, 1-prob)*2
+  logl0 = dnorm(z, postmean, sd = sqrt(postvar), log = T)
+  logl1 = dnorm(-z, postmean, sd = sqrt(postvar), log = T)
+  logLR = logl1 - logl0
+  post_z = (z-postmean)/sqrt(postvar)
+  
+  a_min = 0.8
+  if(max(post_z^2) &lt; 1){
+    a_max = 2
+  }else{
+    a_max = 2*sqrt(max(post_z^2))
+  }
+  npoint = ceiling(log2(a_max/a_min)/log2(1.05))
+  a_grid = 1.05^((-npoint):0) * a_max
+  sd_mtx = outer(sqrt(postvar), a_grid)
+  matrix_llik = dnorm(z - postmean, sd=sd_mtx, log=T)
+  lfactors    &lt;- apply(matrix_llik,1,max)
+  matrix_llik &lt;- matrix_llik - lfactors
+  w = mixsqp(matrix_llik, log=T, control = list(verbose=FALSE))$x
+  
+  logl0mix = as.numeric(log(exp(matrix_llik) %*% w)) + lfactors
+  matrix_llik = dnorm(z + postmean, sd=sd_mtx, log=T)
+  lfactors    &lt;- apply(matrix_llik,1,max)
+  matrix_llik &lt;- matrix_llik - lfactors
+  logl1mix = as.numeric(log(exp(matrix_llik) %*% w)) + lfactors
+  logLRmix = logl1mix - logl0mix
+  postvar_mix = (sd_mtx^2) %*% w
+  
+  return(list(z = z, postmean = postmean, postvar = postvar, post_z = post_z, 
+                    logl0 = logl0, logl1 = logl1, logLR = logLR, 
+                    w = w, postvarmix = postvar_mix,
+                    logl0mix = logl0mix, logl1mix = logl1mix, logLRmix = logLRmix))
+}</code></pre>
+<p>We flip the red dot. The estimated <span class="math inline">\(s\)</span> using partial data is</p>
 <pre class="r"><code>eigenld = eigen(ld)
 eigenld$values[eigenld$values &lt; 1e-8] = 0
 colspace = which(eigenld$values &gt; 0)
 Uz = crossprod(eigenld$vectors, z)
 zcol = crossprod(eigenld$vectors[,colspace], z) # U1^T z
 znull = crossprod(eigenld$vectors[,-colspace], z) # U2^T z
-s2est = sum(znull^2)/length(znull)
-s2est</code></pre>
+s = sum(znull^2)/length(znull)
+s</code></pre>
 <pre><code>[1] 5.762568</code></pre>
+<pre class="r"><code>precision = eigenld$vectors %*% (t(eigenld$vectors) * (1/(eigenld$values + s)))
+res1 = list(s = s, post = posterior_cond(z, precision))</code></pre>
+<pre class="r"><code>s = min(s, 1)
+precision = eigenld$vectors %*% (t(eigenld$vectors) * (1/((1-s)*eigenld$values + s)))
+res2 = list(s = s, post = posterior_cond(z, precision))</code></pre>
+<p>Using pseudo likelihood,</p>
+<pre class="r"><code>pseudolikelihood = function(s, z, eigenld){
+  precision = eigenld$vectors %*% (t(eigenld$vectors) * (1/((1-s)*eigenld$values + s)))
+  postmean = c()
+  postvar = c()
+  for(i in 1:length(z)){
+    postmean = c(postmean, -(1/precision[i,i]) * precision[i,-i] %*% z[-i])
+    postvar = c(postvar, 1/precision[i,i])
+  }
+  -sum(dnorm(z, mean=postmean, sd = sqrt(postvar), log=T))
+}
+s = optim(0.5, fn=pseudolikelihood,
+             z=z, eigenld=eigenld,
+             method = &#39;Brent&#39;, lower=0, upper=1)$par
+s</code></pre>
+<pre><code>[1] 0.7590441</code></pre>
+<pre class="r"><code>precision = eigenld$vectors %*% (t(eigenld$vectors) * (1/((1-s)*eigenld$values + s)))
+res3 = list(s = s, post = posterior_cond(z, precision))</code></pre>
+<pre class="r"><code>x = seq(0.01,0.99,by=0.01)
+yval = sapply(x, function(s) pseudolikelihood(s, z, eigenld))
+plot(x, yval)
+points(76, yval[76], pch=16, col = &#39;red&#39;)</code></pre>
+<p><img src="figure/diagnostic_ukb_lr_signal_eg.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Using likelihood</p>
+<pre class="r"><code>negloglikelihood = function(s, z, eigenld){
+    0.5 * sum(log((1-s)*eigenld$values+s)) + 
+      0.5 * sum(z * eigenld$vectors %*% ((t(eigenld$vectors) * (1/((1-s)*eigenld$values + s))) %*% z))
+}
+s = optim(0.5, fn=negloglikelihood,z=z, eigenld=eigenld,
+          method = &#39;Brent&#39;, lower=0, upper=1)$par
+s</code></pre>
+<pre><code>[1] 0.548428</code></pre>
+<pre class="r"><code>precision = eigenld$vectors %*% (t(eigenld$vectors) * (1/((1-s)*eigenld$values + s)))
+res4 = list(s = s, post = posterior_cond(z, precision))</code></pre>
+<pre class="r"><code>x = seq(0.01,0.99,by=0.01)
+yval = sapply(x, function(s) negloglikelihood(s, z, eigenld))
+plot(x, yval)
+points(x[55], yval[55], pch=16, col = &#39;red&#39;)</code></pre>
+<p><img src="figure/diagnostic_ukb_lr_signal_eg.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
@@ -650,17 +764,19 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
-[1] workflowr_1.6.2
+[1] mixsqp_0.3-46   workflowr_1.6.2
 
 loaded via a namespace (and not attached):
- [1] Rcpp_1.0.6      whisker_0.4     knitr_1.30      magrittr_2.0.1 
- [5] R6_2.5.0        rlang_0.4.10    stringr_1.4.0   tools_4.0.3    
- [9] xfun_0.19       git2r_0.27.1    htmltools_0.5.0 ellipsis_0.3.1 
-[13] yaml_2.2.1      digest_0.6.27   rprojroot_2.0.2 tibble_3.0.6   
-[17] lifecycle_1.0.0 crayon_1.4.1    later_1.1.0.1   vctrs_0.3.6    
-[21] promises_1.1.1  fs_1.5.0        glue_1.4.2      evaluate_0.14  
-[25] rmarkdown_2.5   stringi_1.5.3   compiler_4.0.3  pillar_1.4.7   
-[29] httpuv_1.5.4    pkgconfig_2.0.3</code></pre>
+ [1] Rcpp_1.0.6        whisker_0.4       knitr_1.31        magrittr_2.0.1   
+ [5] lattice_0.20-41   R6_2.5.0          rlang_0.4.10      fansi_0.4.2      
+ [9] highr_0.8         stringr_1.4.0     tools_4.0.3       grid_4.0.3       
+[13] xfun_0.22         utf8_1.2.1        irlba_2.3.3       git2r_0.28.0     
+[17] htmltools_0.5.1.1 ellipsis_0.3.1    rprojroot_2.0.2   yaml_2.2.1       
+[21] digest_0.6.27     tibble_3.1.1      lifecycle_1.0.0   crayon_1.4.1     
+[25] Matrix_1.3-2      later_1.1.0.1     vctrs_0.3.7       promises_1.2.0.1 
+[29] fs_1.5.0          glue_1.4.2        evaluate_0.14     rmarkdown_2.7    
+[33] stringi_1.5.3     compiler_4.0.3    pillar_1.6.0      httpuv_1.5.5     
+[37] pkgconfig_2.0.3  </code></pre>
 </div>
 
 
@@ -704,7 +820,7 @@ $(document).ready(function () {
 
 $(document).ready(function () {
   $('.tabset-dropdown > .nav-tabs > li').click(function () {
-    $(this).parent().toggleClass('nav-tabs-open')
+    $(this).parent().toggleClass('nav-tabs-open');
   });
 });
 </script>
