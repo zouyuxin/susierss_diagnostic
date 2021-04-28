@@ -20,6 +20,6 @@ Simulation using UKB:
 
   1. [Large s2](diagnostic_ukb_lr_signal_eg.html)
   
-  2. [under null](diagnostic_ukb_lr_null_sigma21.html)
+  2. [under null](diagnostic_ukb_lr_null.html)
   
-  3. [with signal](diagnostic_ukb_lr_signal_sigma21.html)
+  3. [with signal](diagnostic_ukb_lr_signal.html)
