@@ -111,7 +111,7 @@ res3 = list(s = s, post = posterior_cond(z, precision))
 x = seq(0.01,0.99,by=0.01)
 yval = sapply(x, function(s) pseudolikelihood(s, z, eigenld))
 plot(x, yval)
-points(76, yval[76], pch=16, col = 'red')
+points(x[76], yval[76], pch=16, col = 'red')
 ```
 
 Using likelihood
