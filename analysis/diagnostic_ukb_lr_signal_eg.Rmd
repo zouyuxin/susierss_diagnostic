@@ -9,6 +9,7 @@ output:
 
 There are 1002 SNPs in the region.
 ```{r}
+library(mixsqp)
 dat = readRDS('data/rss_diagnostic_ukb_s2large.rds')
 z = dat$z
 zorig = z
@@ -21,7 +22,52 @@ The original z scores are
 plot(zorig, pch=16)
 points(dat$idx, zorig[dat$idx], col='red', pch=16)
 ```
-We flip the red dot. The estimated $s^2$ is 
+```{r}
+posterior_cond = function(z, precision){
+  postmean = c()
+  postvar = c()
+  for(i in 1:length(z)){
+    postmean = c(postmean, -(1/precision[i,i]) * precision[i,-i] %*% z[-i])
+    postvar = c(postvar, 1/precision[i,i])
+  }
+  prob = pnorm(z, postmean, sd = sqrt(postvar))
+  prob = pmin(prob, 1-prob)*2
+  logl0 = dnorm(z, postmean, sd = sqrt(postvar), log = T)
+  logl1 = dnorm(-z, postmean, sd = sqrt(postvar), log = T)
+  logLR = logl1 - logl0
+  post_z = (z-postmean)/sqrt(postvar)
+  
+  a_min = 0.8
+  if(max(post_z^2) < 1){
+    a_max = 2
+  }else{
+    a_max = 2*sqrt(max(post_z^2))
+  }
+  npoint = ceiling(log2(a_max/a_min)/log2(1.05))
+  a_grid = 1.05^((-npoint):0) * a_max
+  sd_mtx = outer(sqrt(postvar), a_grid)
+  matrix_llik = dnorm(z - postmean, sd=sd_mtx, log=T)
+  lfactors    <- apply(matrix_llik,1,max)
+  matrix_llik <- matrix_llik - lfactors
+  w = mixsqp(matrix_llik, log=T, control = list(verbose=FALSE))$x
+  
+  logl0mix = as.numeric(log(exp(matrix_llik) %*% w)) + lfactors
+  matrix_llik = dnorm(z + postmean, sd=sd_mtx, log=T)
+  lfactors    <- apply(matrix_llik,1,max)
+  matrix_llik <- matrix_llik - lfactors
+  logl1mix = as.numeric(log(exp(matrix_llik) %*% w)) + lfactors
+  logLRmix = logl1mix - logl0mix
+  postvar_mix = (sd_mtx^2) %*% w
+  
+  return(list(z = z, postmean = postmean, postvar = postvar, post_z = post_z, 
+                    logl0 = logl0, logl1 = logl1, logLR = logLR, 
+                    w = w, postvarmix = postvar_mix,
+                    logl0mix = logl0mix, logl1mix = logl1mix, logLRmix = logLRmix))
+}
+
+```
+
+We flip the red dot. The estimated $s$ using partial data is
 ```{r}
 eigenld = eigen(ld)
 eigenld$values[eigenld$values < 1e-8] = 0
@@ -29,8 +75,61 @@ colspace = which(eigenld$values > 0)
 Uz = crossprod(eigenld$vectors, z)
 zcol = crossprod(eigenld$vectors[,colspace], z) # U1^T z
 znull = crossprod(eigenld$vectors[,-colspace], z) # U2^T z
-s2est = sum(znull^2)/length(znull)
-s2est
+s = sum(znull^2)/length(znull)
+s
+precision = eigenld$vectors %*% (t(eigenld$vectors) * (1/(eigenld$values + s)))
+res1 = list(s = s, post = posterior_cond(z, precision))
 ```
 
+```{r}
+s = min(s, 1)
+precision = eigenld$vectors %*% (t(eigenld$vectors) * (1/((1-s)*eigenld$values + s)))
+res2 = list(s = s, post = posterior_cond(z, precision))
+```
 
+Using pseudo likelihood,
+```{r}
+pseudolikelihood = function(s, z, eigenld){
+  precision = eigenld$vectors %*% (t(eigenld$vectors) * (1/((1-s)*eigenld$values + s)))
+  postmean = c()
+  postvar = c()
+  for(i in 1:length(z)){
+    postmean = c(postmean, -(1/precision[i,i]) * precision[i,-i] %*% z[-i])
+    postvar = c(postvar, 1/precision[i,i])
+  }
+  -sum(dnorm(z, mean=postmean, sd = sqrt(postvar), log=T))
+}
+s = optim(0.5, fn=pseudolikelihood,
+             z=z, eigenld=eigenld,
+             method = 'Brent', lower=0, upper=1)$par
+s
+precision = eigenld$vectors %*% (t(eigenld$vectors) * (1/((1-s)*eigenld$values + s)))
+res3 = list(s = s, post = posterior_cond(z, precision))
+```
+
+```{r}
+x = seq(0.01,0.99,by=0.01)
+yval = sapply(x, function(s) pseudolikelihood(s, z, eigenld))
+plot(x, yval)
+points(76, yval[76], pch=16, col = 'red')
+```
+
+Using likelihood
+```{r}
+negloglikelihood = function(s, z, eigenld){
+    0.5 * sum(log((1-s)*eigenld$values+s)) + 
+      0.5 * sum(z * eigenld$vectors %*% ((t(eigenld$vectors) * (1/((1-s)*eigenld$values + s))) %*% z))
+}
+s = optim(0.5, fn=negloglikelihood,z=z, eigenld=eigenld,
+          method = 'Brent', lower=0, upper=1)$par
+s
+precision = eigenld$vectors %*% (t(eigenld$vectors) * (1/((1-s)*eigenld$values + s)))
+res4 = list(s = s, post = posterior_cond(z, precision))
+```
+
+```{r}
+x = seq(0.01,0.99,by=0.01)
+yval = sapply(x, function(s) negloglikelihood(s, z, eigenld))
+plot(x, yval)
+points(x[55], yval[55], pch=16, col = 'red')
+```
