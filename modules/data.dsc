@@ -19,9 +19,22 @@ get_sumstats: R(res = susieR:::univariate_regression(X, Y))
   
 flip_z: flip.R
   sumstats: $sumstats
+  BBJsnps: $BBJsnps
   meta: $meta
-  (flip, flip_pos): (FALSE, "null"),(TRUE, "signal"),(TRUE, "null")
+  (flip, flip_pos): (FALSE, "null"),(TRUE, 'null'),(TRUE, "signal")
   $z: z
   $idx: idx
+  $zbbj: zbbj
+  $idxbbj: idxbbj
   
+data_ukb: misc.R + data_ukb.R
+  dataset: Shell{head -${n_dataset} ${data_file}}
+  genotype_dir: ${genotype_dir}
+  gwasfile: ${gwasfile}
+  gwasres: file(bbj)
+  GWASsample: ${GWASsample}
+  REFsample: ${REFsample}
+  $X: X.sample
+  $ld: list(sample = r.sample, ref = r.ref)
+  $BBJsnps: BBJsnps
   
