@@ -13,3 +13,7 @@ sim_gaussian: simulate.R + \
 
 sim_gaussian_null(sim_gaussian):
   n_signal: 0
+  
+sim_gaussian_ukb(sim_gaussian):
+  pve: 0.02
+  

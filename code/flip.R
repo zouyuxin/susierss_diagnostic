@@ -15,3 +15,11 @@ if(flip == TRUE){
     z[idx] = -z[idx]
   }
 }
+
+## BBJ z scores
+zbbj = BBJsnps$beta/BBJsnps$se
+idxbbj = NA
+if(flip == TRUE){
+  idxbbj = sample(1:length(zbbj), 1)
+  zbbj[idxbbj] = -zbbj[idxbbj]
+}
