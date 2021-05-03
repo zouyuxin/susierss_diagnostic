@@ -17,9 +17,9 @@ Simulation: [result](diagnostic_lr.html)
 Eg: [eg](diagnostic_lr_eg.html)
 
 Simulation using UKB: 
+  
+  1. [under null](diagnostic_ukb_lr_null.html)
 
-  1. [Large s2](diagnostic_ukb_lr_signal_eg.html)
-  
-  2. [under null](diagnostic_ukb_lr_null.html)
-  
-  3. [with signal](diagnostic_ukb_lr_signal.html)
+  2. [with signal](diagnostic_ukb_lr_signal.html)
+
+  3. [eg](diagnostic_ukb_lr_flipeg.html)
